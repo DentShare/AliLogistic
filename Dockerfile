@@ -7,10 +7,7 @@ RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app
+RUN npm install -g serve
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/vite.config.ts ./
-COPY --from=build /app/node_modules ./node_modules
-EXPOSE 4173
-ENV PORT=4173
-CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "4173"]
+ENV PORT=3000
+CMD ["sh", "-c", "serve dist -l $PORT -s"]

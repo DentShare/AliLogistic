@@ -2,13 +2,16 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Truck, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle } from 'lucide-react'
 import StatusBadge from '../components/StatusBadge'
-import { units, oilRecords, inspections, registrations, repairs, defects, oilStatus, daysStatus } from '../data/mock'
+import { useApp } from '../context/AppContext'
+import { oilStatus, daysStatus } from '../data/mock'
 
 const tabs = ['Overview', 'Oil', 'Repairs', 'Defects', 'Timeline'] as const
 
 export default function UnitProfile() {
   const { id } = useParams()
   const [tab, setTab] = useState<typeof tabs[number]>('Overview')
+  const { units, oilRecords, inspections, registrations, repairs, defects, drivers, oilThresholds, resolveDefect, reopenDefect, assignDriver, openModal } = useApp()
+
   const unit = units.find(u => u.id === id)
   if (!unit) return <div className="text-slate-400">Unit not found</div>
 
@@ -49,12 +52,29 @@ export default function UnitProfile() {
                 )}
               </div>
               <div className="flex items-center gap-4 mt-1 text-sm text-slate-400">
-                <span>{unit.driver}</span>
+                <select
+                  value={drivers.find(d => d.unit_id === unit.id)?.id || ''}
+                  onChange={e => {
+                    const drv = drivers.find(d => d.id === e.target.value)
+                    if (drv) assignDriver(unit.id, drv.name, drv.id)
+                    else assignDriver(unit.id, '—')
+                  }}
+                  className="bg-navy-700 border border-navy-600 rounded-lg px-2 py-1 text-xs text-slate-300 outline-none focus:border-accent"
+                >
+                  <option value="">— No driver —</option>
+                  {drivers.filter(d => d.status === 'working').map(d => (
+                    <option key={d.id} value={d.id}>{d.name}{d.unit_id && d.unit_id !== unit.id ? ' (assigned)' : ''}</option>
+                  ))}
+                </select>
                 <span className="font-mono text-xs text-slate-500">{unit.vin}</span>
                 <span className="font-mono">{unit.mileage.toLocaleString()} mi</span>
               </div>
             </div>
           </div>
+          <button onClick={() => openModal('mileage', { unitId: unit.id })}
+            className="px-3 py-1.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors">
+            Update Mileage
+          </button>
         </div>
 
         <div className="flex gap-1 border-b border-navy-700 mt-4">
@@ -95,7 +115,7 @@ export default function UnitProfile() {
                 <div className="flex items-center gap-2 mb-3"><Droplets size={16} className="text-blue-400" /><span className="text-sm font-semibold text-slate-300">Oil (worst)</span></div>
                 <div className="text-xs text-slate-500 mb-1">{worstOil.oil_type}</div>
                 <div className="w-full h-2 bg-navy-600 rounded-full overflow-hidden mb-1">
-                  <div className={`h-full rounded-full ${oilStatus(worstOil.remaining, worstOil.change_interval) === 'critical' ? 'bg-red-500' : oilStatus(worstOil.remaining, worstOil.change_interval) === 'warning' ? 'bg-orange-500' : 'bg-emerald-500'}`}
+                  <div className={`h-full rounded-full ${oilStatus(worstOil.remaining, worstOil.change_interval, oilThresholds) === 'critical' ? 'bg-red-500' : oilStatus(worstOil.remaining, worstOil.change_interval, oilThresholds) === 'warning' ? 'bg-orange-500' : 'bg-emerald-500'}`}
                     style={{ width: `${Math.min(100, (worstOil.remaining / worstOil.change_interval) * 100)}%` }} />
                 </div>
                 <div className="text-xs font-mono text-slate-400">{worstOil.remaining.toLocaleString()} mi remaining</div>
@@ -126,9 +146,9 @@ export default function UnitProfile() {
       )}
 
       {tab === 'Oil' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {unitOil.map(o => {
-            const st = oilStatus(o.remaining, o.change_interval)
+            const st = oilStatus(o.remaining, o.change_interval, oilThresholds)
             return (
               <div key={o.id} className="bg-navy-800 rounded-xl border border-navy-700 p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -148,7 +168,7 @@ export default function UnitProfile() {
               </div>
             )
           })}
-          {unitOil.length === 0 && <div className="text-slate-500 text-sm">No oil records for this unit.</div>}
+          {unitOil.length === 0 && <div className="text-slate-500 text-sm">No oil records.</div>}
         </div>
       )}
 
@@ -187,7 +207,7 @@ export default function UnitProfile() {
       )}
 
       {tab === 'Defects' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {unitDefects.map(d => (
             <div key={d.id} className={`bg-navy-800 rounded-xl border border-navy-700 border-l-4 ${d.severity === 'critical' ? 'border-l-red-500' : d.severity === 'moderate' ? 'border-l-orange-500' : 'border-l-yellow-500'} p-4`}>
               <div className="flex items-center justify-between mb-2">
@@ -197,9 +217,14 @@ export default function UnitProfile() {
               <p className="text-sm text-slate-300 mb-2">{d.description}</p>
               <div className="text-xs text-slate-500">Reported by {d.reported_by} on {d.date}</div>
               {d.resolved_date && <div className="text-xs text-emerald-500 mt-1">Resolved {d.resolved_date}</div>}
+              {d.status === 'active' ? (
+                <button onClick={() => resolveDefect(d.id)} className="mt-2 w-full py-1.5 bg-emerald-500/15 text-emerald-400 text-xs font-semibold rounded-lg hover:bg-emerald-500/25 transition-colors">Resolve</button>
+              ) : (
+                <button onClick={() => reopenDefect(d.id)} className="mt-2 w-full py-1.5 bg-orange-500/15 text-orange-400 text-xs font-semibold rounded-lg hover:bg-orange-500/25 transition-colors">Reopen</button>
+              )}
             </div>
           ))}
-          {unitDefects.length === 0 && <div className="text-slate-500 text-sm">No defects reported.</div>}
+          {unitDefects.length === 0 && <div className="text-slate-500 text-sm">No defects.</div>}
         </div>
       )}
 
@@ -222,7 +247,7 @@ export default function UnitProfile() {
                   </div>
                 </div>
               ))}
-              {timeline.length === 0 && <div className="text-slate-500 text-sm ml-10">No activity recorded.</div>}
+              {timeline.length === 0 && <div className="text-slate-500 text-sm ml-10">No activity.</div>}
             </div>
           </div>
         </div>

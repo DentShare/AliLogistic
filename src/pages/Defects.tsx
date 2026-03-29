@@ -1,12 +1,7 @@
 import { AlertTriangle, AlertCircle, CheckCircle, AlertOctagon } from 'lucide-react'
 import KpiCard from '../components/KpiCard'
 import StatusBadge from '../components/StatusBadge'
-import { defects, getUnit } from '../data/mock'
-
-const active = defects.filter(d => d.status === 'active')
-const resolved = defects.filter(d => d.status === 'resolved')
-const critical = defects.filter(d => d.severity === 'critical' && d.status === 'active').length
-const moderate = defects.filter(d => d.severity === 'moderate' && d.status === 'active').length
+import { useApp } from '../context/AppContext'
 
 const severityBorder: Record<string, string> = {
   critical: 'border-l-red-500',
@@ -15,6 +10,14 @@ const severityBorder: Record<string, string> = {
 }
 
 export default function Defects() {
+  const { defects, units, resolveDefect, reopenDefect } = useApp()
+  const getUnit = (id: string) => units.find(u => u.id === id)
+  const sevOrder = { critical: 0, moderate: 1, low: 2 }
+  const active = defects.filter(d => d.status === 'active').sort((a, b) => (sevOrder[a.severity] ?? 2) - (sevOrder[b.severity] ?? 2))
+  const resolved = defects.filter(d => d.status === 'resolved')
+  const critical = active.filter(d => d.severity === 'critical').length
+  const moderate = active.filter(d => d.severity === 'moderate').length
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -26,7 +29,7 @@ export default function Defects() {
 
       <div>
         <h3 className="text-sm font-semibold text-slate-400 mb-3">Active Defects</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {active.map(d => {
             const unit = getUnit(d.unit_id)
             if (!unit) return null
@@ -44,18 +47,20 @@ export default function Defects() {
                   <span>Reported by {d.reported_by}</span>
                   <span className="font-mono">{d.date}</span>
                 </div>
-                <button className="mt-3 w-full py-1.5 bg-emerald-500/15 text-emerald-400 text-xs font-semibold rounded-lg hover:bg-emerald-500/25 transition-colors">
+                <button onClick={() => resolveDefect(d.id)}
+                  className="mt-3 w-full py-1.5 bg-emerald-500/15 text-emerald-400 text-xs font-semibold rounded-lg hover:bg-emerald-500/25 transition-colors">
                   Resolve Defect
                 </button>
               </div>
             )
           })}
+          {active.length === 0 && <div className="text-emerald-400 text-sm col-span-3">No active defects. All clear!</div>}
         </div>
       </div>
 
       <div>
         <h3 className="text-sm font-semibold text-slate-400 mb-3">Resolved</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {resolved.map(d => {
             const unit = getUnit(d.unit_id)
             if (!unit) return null
@@ -73,6 +78,10 @@ export default function Defects() {
                   <span>Reported {d.date}</span>
                   <span>Resolved {d.resolved_date}</span>
                 </div>
+                <button onClick={() => reopenDefect(d.id)}
+                  className="mt-3 w-full py-1.5 bg-orange-500/15 text-orange-400 text-xs font-semibold rounded-lg hover:bg-orange-500/25 transition-colors">
+                  Reopen Defect
+                </button>
               </div>
             )
           })}

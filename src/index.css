@@ -27,10 +27,66 @@ body {
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2e374c; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--color-navy-500); border-radius: 3px; }
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --color-navy-950: #f1f5f9;
+  --color-navy-900: #f8fafc;
+  --color-navy-800: #ffffff;
+  --color-navy-700: #e2e8f0;
+  --color-navy-600: #cbd5e1;
+  --color-navy-500: #94a3b8;
+}
+[data-theme="light"] body,
+[data-theme="light"] {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+/* Light theme text contrast */
+[data-theme="light"] .text-white { color: #0f172a; }
+[data-theme="light"] .text-slate-200 { color: #334155; }
+[data-theme="light"] .text-slate-300 { color: #475569; }
+[data-theme="light"] .text-slate-400 { color: #64748b; }
+[data-theme="light"] .text-slate-500 { color: #94a3b8; }
+[data-theme="light"] .text-slate-600 { color: #94a3b8; }
+
+/* Keep button/badge text white in light mode */
+[data-theme="light"] .bg-accent .text-white,
+[data-theme="light"] .bg-accent.text-white,
+[data-theme="light"] .bg-emerald-600 .text-white,
+[data-theme="light"] .bg-emerald-600.text-white,
+[data-theme="light"] button.bg-accent,
+[data-theme="light"] [class*="bg-red-500/20"] .text-red-400,
+[data-theme="light"] [class*="bg-emerald-500/20"] .text-emerald-400 {
+  color: inherit;
+}
+
+/* Light theme specific overrides for interactive elements */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Shadows for light theme cards */
+[data-theme="light"] .bg-navy-800 {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
 
 @keyframes pulse-slow {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

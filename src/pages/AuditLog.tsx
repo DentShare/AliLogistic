@@ -1,11 +1,6 @@
 import { ClipboardList, Calendar, Hash, BarChart3 } from 'lucide-react'
 import KpiCard from '../components/KpiCard'
-import { auditLog } from '../data/mock'
-
-const todayCount = auditLog.filter(e => e.timestamp.startsWith('2026-03-28')).length
-const dispatchers = [...new Set(auditLog.map(e => e.dispatcher))]
-const mostModified = auditLog.reduce((acc, e) => { acc[e.unit_number] = (acc[e.unit_number] || 0) + 1; return acc }, {} as Record<string, number>)
-const topUnit = Object.entries(mostModified).sort((a, b) => b[1] - a[1])[0]
+import { useApp } from '../context/AppContext'
 
 const moduleColors: Record<string, string> = {
   Oil: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
@@ -14,18 +9,25 @@ const moduleColors: Record<string, string> = {
   Repairs: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
   Inspection: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
   Registration: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+  Units: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
 }
-
 const initials = (name: string) => name.split(' ').map(n => n[0]).join('')
 
-const dispatcherStats = dispatchers.map(d => {
-  const entries = auditLog.filter(e => e.dispatcher === d)
-  const units = [...new Set(entries.map(e => e.unit_number))]
-  const modules = [...new Set(entries.map(e => e.module))]
-  return { name: d, total: entries.length, units: units.length, modules }
-})
-
 export default function AuditLog() {
+  const { auditLog } = useApp()
+  const today = new Date().toISOString().slice(0, 10)
+  const todayCount = auditLog.filter(e => e.timestamp.startsWith(today)).length
+  const dispatchers = [...new Set(auditLog.map(e => e.dispatcher))]
+  const mostModified = auditLog.reduce((acc, e) => { acc[e.unit_number] = (acc[e.unit_number] || 0) + 1; return acc }, {} as Record<string, number>)
+  const topUnit = Object.entries(mostModified).sort((a, b) => b[1] - a[1])[0]
+
+  const dispatcherStats = dispatchers.map(d => {
+    const entries = auditLog.filter(e => e.dispatcher === d)
+    const unitsSet = [...new Set(entries.map(e => e.unit_number))]
+    const modules = [...new Set(entries.map(e => e.module))]
+    return { name: d, total: entries.length, units: unitsSet.length, modules }
+  })
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -38,9 +40,7 @@ export default function AuditLog() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {dispatcherStats.map(d => (
           <div key={d.name} className="bg-navy-800 rounded-xl border border-navy-700 p-4 flex items-center gap-4">
-            <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center text-accent font-bold">
-              {initials(d.name)}
-            </div>
+            <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center text-accent font-bold">{initials(d.name)}</div>
             <div className="flex-1">
               <div className="text-sm font-semibold text-white">{d.name}</div>
               <div className="text-xs text-slate-500">{d.total} changes &middot; {d.units} units touched</div>

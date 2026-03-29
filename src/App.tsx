@@ -1,6 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useApp } from './context/AppContext'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import ToastContainer from './components/Toast'
+import GlobalModals from './components/GlobalModals'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import OilFluids from './pages/OilFluids'
 import Inspections from './pages/Inspections'
@@ -11,11 +15,18 @@ import UnitsList from './pages/UnitsList'
 import UnitProfile from './pages/UnitProfile'
 import DriversHR from './pages/DriversHR'
 import AuditLog from './pages/AuditLog'
+import Dispatchers from './pages/Dispatchers'
 
 export default function App() {
+  const { theme, fullscreen, isAuthenticated } = useApp()
+
+  if (!isAuthenticated) {
+    return <Login />
+  }
+
   return (
-    <div className="flex min-h-screen bg-navy-950">
-      <Sidebar />
+    <div className="flex min-h-screen w-full bg-navy-950" data-theme={theme}>
+      {!fullscreen && <Sidebar />}
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <main className="flex-1 p-6 overflow-auto">
@@ -29,11 +40,14 @@ export default function App() {
             <Route path="/units" element={<UnitsList />} />
             <Route path="/units/:id" element={<UnitProfile />} />
             <Route path="/drivers" element={<DriversHR />} />
+            <Route path="/dispatchers" element={<Dispatchers />} />
             <Route path="/audit" element={<AuditLog />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
       </div>
+      <GlobalModals />
+      <ToastContainer />
     </div>
   )
 }

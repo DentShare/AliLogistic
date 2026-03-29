@@ -8,6 +8,7 @@ const styles: Record<string, string> = {
   valid: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
   active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
   in_repair: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+  needs_repair: 'bg-red-500/15 text-red-400 border-red-500/30',
   inactive: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
   resolved: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
   moderate: 'bg-orange-500/15 text-orange-400 border-orange-500/30',

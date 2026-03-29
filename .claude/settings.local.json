@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "Task(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "TodoWrite(*)",
+      "NotebookEdit(*)",
+      "mcp__github__*",
+      "mcp__supabase__*",
+      "mcp__claude-flow__*",
+      "mcp__task-master-ai__*",
+      "Bash(pandoc \"FleetOps_PRD_v2.docx\" -o FleetOps_PRD_v2.md)",
+      "Bash(npm create:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(railway login:*)"
+    ],
+    "deny": []
+  }
+}
