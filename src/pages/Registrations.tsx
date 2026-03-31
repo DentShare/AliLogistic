@@ -99,10 +99,13 @@ function sortRegistrations(regs: Registration[]): Registration[] {
 
 export default function Registrations() {
   const [view, setView] = useState<'cards' | 'table'>('cards')
-  const { registrations, units, renewRegistration, updateRegistration, uploadRegDocument } = useApp()
+  const { registrations, units, renewRegistration, updateRegistration, uploadRegDocument, searchQuery } = useApp()
   const getUnit = (id: string) => units.find(u => u.id === id)
 
-  const sorted = sortRegistrations(registrations)
+  const filteredRegs = searchQuery
+    ? registrations.filter(r => { const u = getUnit(r.unit_id); const q = searchQuery.toLowerCase(); return u?.unit_number.toLowerCase().includes(q) || u?.driver.toLowerCase().includes(q) || r.plate_number.toLowerCase().includes(q) || r.state.toLowerCase().includes(q) })
+    : registrations
+  const sorted = sortRegistrations(filteredRegs)
 
   const expired = registrations.filter(r => r.days_remaining < 0).length
   const urgent = registrations.filter(r => r.days_remaining >= 0 && r.days_remaining <= 30).length

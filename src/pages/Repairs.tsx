@@ -38,19 +38,23 @@ const nextStatus: Record<RepairStatus, RepairStatus | null> = {
 }
 
 export default function Repairs() {
-  const { repairs, units, updateRepairStatus } = useApp()
+  const { repairs, units, updateRepairStatus, searchQuery } = useApp()
   const getUnit = (id: string) => units.find(u => u.id === id)
 
-  const totalCost = repairs.reduce((s, r) => s + r.cost, 0)
-  const categories = [...new Set(repairs.map(r => r.category))]
-  const catBreakdown = categories.map(c => ({ cat: c, total: repairs.filter(r => r.category === c).reduce((s, r) => s + r.cost, 0) })).sort((a, b) => b.total - a.total)
+  const filteredRepairs = searchQuery
+    ? repairs.filter(r => { const u = getUnit(r.unit_id); const q = searchQuery.toLowerCase(); return u?.unit_number.toLowerCase().includes(q) || u?.driver.toLowerCase().includes(q) || r.service.toLowerCase().includes(q) || r.category.toLowerCase().includes(q) || r.shop.toLowerCase().includes(q) })
+    : repairs
 
-  const needsRepairCount = repairs.filter(r => r.status === 'needs_repair').length
-  const sentCount = repairs.filter(r => r.status === 'sent').length
-  const inRepairCount = repairs.filter(r => r.status === 'in_repair').length
-  const workingCount = repairs.filter(r => r.status === 'working').length
+  const totalCost = filteredRepairs.reduce((s, r) => s + r.cost, 0)
+  const categories = [...new Set(filteredRepairs.map(r => r.category))]
+  const catBreakdown = categories.map(c => ({ cat: c, total: filteredRepairs.filter(r => r.category === c).reduce((s, r) => s + r.cost, 0) })).sort((a, b) => b.total - a.total)
 
-  const sortedRepairs = [...repairs].sort((a, b) => {
+  const needsRepairCount = filteredRepairs.filter(r => r.status === 'needs_repair').length
+  const sentCount = filteredRepairs.filter(r => r.status === 'sent').length
+  const inRepairCount = filteredRepairs.filter(r => r.status === 'in_repair').length
+  const workingCount = filteredRepairs.filter(r => r.status === 'working').length
+
+  const sortedRepairs = [...filteredRepairs].sort((a, b) => {
     const orderA = statusOrder[(a.status as RepairStatus) || 'needs_repair']
     const orderB = statusOrder[(b.status as RepairStatus) || 'needs_repair']
     if (orderA !== orderB) return orderA - orderB

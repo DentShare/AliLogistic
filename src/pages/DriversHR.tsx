@@ -8,12 +8,16 @@ const statusColors: Record<string, string> = { working: 'bg-emerald-500', review
 const initials = (name: string) => name.split(' ').map(n => n[0]).join('')
 
 export default function DriversHR() {
-  const { drivers, units, createDriver, updateDriverStatus } = useApp()
+  const { drivers, units, createDriver, updateDriverStatus, searchQuery } = useApp()
   const [showCreate, setShowCreate] = useState(false)
 
-  const reviewing = drivers.filter(d => d.status === 'reviewing')
-  const working = drivers.filter(d => d.status === 'working')
-  const terminated = drivers.filter(d => d.status === 'terminated')
+  const filteredDrivers = searchQuery
+    ? drivers.filter(d => { const q = searchQuery.toLowerCase(); return d.name.toLowerCase().includes(q) || d.phone.toLowerCase().includes(q) || d.cdl_number.toLowerCase().includes(q) })
+    : drivers
+
+  const reviewing = filteredDrivers.filter(d => d.status === 'reviewing')
+  const working = filteredDrivers.filter(d => d.status === 'working')
+  const terminated = filteredDrivers.filter(d => d.status === 'terminated')
 
   return (
     <div className="flex flex-col gap-6 h-full">

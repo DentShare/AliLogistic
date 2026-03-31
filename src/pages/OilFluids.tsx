@@ -8,7 +8,7 @@ import { oilStatus } from '../data/mock'
 const STATUS_ORDER: Record<string, number> = { critical: 0, warning: 1, ok: 2, good: 3, sent: 4 }
 
 export default function OilFluids() {
-  const { oilRecords, units, oilThresholds, setOilThresholds, sendForChange, openModal, updateOilType, updateOilInterval } = useApp()
+  const { oilRecords, units, oilThresholds, setOilThresholds, sendForChange, openModal, updateOilType, updateOilInterval, searchQuery } = useApp()
   const [editingType, setEditingType] = useState<string | null>(null)
   const [editingInterval, setEditingInterval] = useState<string | null>(null)
   const [editVal, setEditVal] = useState('')
@@ -29,16 +29,24 @@ export default function OilFluids() {
   }, [oilRecords])
 
   const sortedAndFiltered = useMemo(() => {
-    const filtered = categoryFilter === 'All'
+    let filtered = categoryFilter === 'All'
       ? oilRecords
       : oilRecords.filter(o => o.oil_type === categoryFilter)
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      filtered = filtered.filter(o => {
+        const unit = getUnit(o.unit_id)
+        return unit?.unit_number.toLowerCase().includes(q) || unit?.driver.toLowerCase().includes(q) || o.oil_type.toLowerCase().includes(q)
+      })
+    }
 
     return [...filtered].sort((a, b) => {
       const stA = a.sent_for_change ? 'sent' : st(a.remaining, a.change_interval)
       const stB = b.sent_for_change ? 'sent' : st(b.remaining, b.change_interval)
       return (STATUS_ORDER[stA] ?? 99) - (STATUS_ORDER[stB] ?? 99)
     })
-  }, [oilRecords, categoryFilter])
+  }, [oilRecords, categoryFilter, searchQuery])
 
   return (
     <div className="space-y-6">

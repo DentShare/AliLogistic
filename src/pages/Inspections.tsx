@@ -70,11 +70,15 @@ function UploadDocBtn({ inspId, onUpload }: { inspId: string; onUpload: (id: str
 
 export default function Inspections() {
   const [view, setView] = useState<'table' | 'cards'>('cards')
-  const { inspections, units, passInspection, uploadInspDocument } = useApp()
+  const { inspections, units, passInspection, uploadInspDocument, searchQuery } = useApp()
   const getUnit = (id: string) => units.find(u => u.id === id)
 
+  const filtered = searchQuery
+    ? inspections.filter(i => { const u = getUnit(i.unit_id); const q = searchQuery.toLowerCase(); return u?.unit_number.toLowerCase().includes(q) || u?.driver.toLowerCase().includes(q) || i.doc_number.toLowerCase().includes(q) })
+    : inspections
+
   // Sort: expired first, then by days_remaining ascending (most urgent first)
-  const sorted = [...inspections].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
     const aExpired = a.days_remaining < 0 ? 0 : 1
     const bExpired = b.days_remaining < 0 ? 0 : 1
     if (aExpired !== bExpired) return aExpired - bExpired

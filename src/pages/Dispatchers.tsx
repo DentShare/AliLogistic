@@ -20,13 +20,17 @@ const roleIcons: Record<string, typeof Shield> = {
 }
 
 export default function Dispatchers() {
-  const { dispatchers, createDispatcher, updateDispatcherStatus, updateDispatcherRole, updateDispatcherModules } = useApp()
+  const { dispatchers, createDispatcher, updateDispatcherStatus, updateDispatcherRole, updateDispatcherModules, searchQuery } = useApp()
   const [showCreate, setShowCreate] = useState(false)
   const [editingAccess, setEditingAccess] = useState<string | null>(null)
 
-  const active = dispatchers.filter(d => d.status === 'active').length
-  const invited = dispatchers.filter(d => d.status === 'invited').length
-  const disabled = dispatchers.filter(d => d.status === 'disabled').length
+  const filteredDispatchers = searchQuery
+    ? dispatchers.filter(d => { const q = searchQuery.toLowerCase(); return d.name.toLowerCase().includes(q) || d.email.toLowerCase().includes(q) || d.role.toLowerCase().includes(q) })
+    : dispatchers
+
+  const active = filteredDispatchers.filter(d => d.status === 'active').length
+  const invited = filteredDispatchers.filter(d => d.status === 'invited').length
+  const disabled = filteredDispatchers.filter(d => d.status === 'disabled').length
 
   return (
     <div className="space-y-6">
@@ -48,7 +52,7 @@ export default function Dispatchers() {
       {showCreate && <CreateForm onClose={() => setShowCreate(false)} onCreate={createDispatcher} />}
 
       <div className="space-y-3">
-        {dispatchers.map(d => (
+        {filteredDispatchers.map(d => (
           <div key={d.id} className="bg-navy-800 rounded-xl border border-navy-700 p-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-4 min-w-0">

@@ -14,15 +14,20 @@ const moduleColors: Record<string, string> = {
 const initials = (name: string) => name.split(' ').map(n => n[0]).join('')
 
 export default function AuditLog() {
-  const { auditLog } = useApp()
+  const { auditLog, searchQuery } = useApp()
+
+  const filteredLog = searchQuery
+    ? auditLog.filter(e => { const q = searchQuery.toLowerCase(); return e.unit_number.toLowerCase().includes(q) || e.dispatcher.toLowerCase().includes(q) || e.module.toLowerCase().includes(q) || e.description.toLowerCase().includes(q) })
+    : auditLog
+
   const today = new Date().toISOString().slice(0, 10)
-  const todayCount = auditLog.filter(e => e.timestamp.startsWith(today)).length
-  const dispatchers = [...new Set(auditLog.map(e => e.dispatcher))]
-  const mostModified = auditLog.reduce((acc, e) => { acc[e.unit_number] = (acc[e.unit_number] || 0) + 1; return acc }, {} as Record<string, number>)
+  const todayCount = filteredLog.filter(e => e.timestamp.startsWith(today)).length
+  const dispatchers = [...new Set(filteredLog.map(e => e.dispatcher))]
+  const mostModified = filteredLog.reduce((acc, e) => { acc[e.unit_number] = (acc[e.unit_number] || 0) + 1; return acc }, {} as Record<string, number>)
   const topUnit = Object.entries(mostModified).sort((a, b) => b[1] - a[1])[0]
 
   const dispatcherStats = dispatchers.map(d => {
-    const entries = auditLog.filter(e => e.dispatcher === d)
+    const entries = filteredLog.filter(e => e.dispatcher === d)
     const unitsSet = [...new Set(entries.map(e => e.unit_number))]
     const modules = [...new Set(entries.map(e => e.module))]
     return { name: d, total: entries.length, units: unitsSet.length, modules }
@@ -64,7 +69,7 @@ export default function AuditLog() {
             </tr>
           </thead>
           <tbody>
-            {auditLog.map(e => (
+            {filteredLog.map(e => (
               <tr key={e.id} className="border-b border-navy-700/50 hover:bg-navy-700/30">
                 <td className="px-4 py-3 font-mono text-xs text-slate-500">{e.timestamp}</td>
                 <td className="px-4 py-3">

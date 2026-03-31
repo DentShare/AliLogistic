@@ -10,11 +10,16 @@ const severityBorder: Record<string, string> = {
 }
 
 export default function Defects() {
-  const { defects, units, resolveDefect, reopenDefect } = useApp()
+  const { defects, units, resolveDefect, reopenDefect, searchQuery } = useApp()
   const getUnit = (id: string) => units.find(u => u.id === id)
   const sevOrder = { critical: 0, moderate: 1, low: 2 }
-  const active = defects.filter(d => d.status === 'active').sort((a, b) => (sevOrder[a.severity] ?? 2) - (sevOrder[b.severity] ?? 2))
-  const resolved = defects.filter(d => d.status === 'resolved')
+
+  const filteredDefects = searchQuery
+    ? defects.filter(d => { const u = getUnit(d.unit_id); const q = searchQuery.toLowerCase(); return u?.unit_number.toLowerCase().includes(q) || u?.driver.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) })
+    : defects
+
+  const active = filteredDefects.filter(d => d.status === 'active').sort((a, b) => (sevOrder[a.severity] ?? 2) - (sevOrder[b.severity] ?? 2))
+  const resolved = filteredDefects.filter(d => d.status === 'resolved')
   const critical = active.filter(d => d.severity === 'critical').length
   const moderate = active.filter(d => d.severity === 'moderate').length
 
