@@ -16,6 +16,8 @@ import UnitProfile from './pages/UnitProfile'
 import DriversHR from './pages/DriversHR'
 import AuditLog from './pages/AuditLog'
 import Dispatchers from './pages/Dispatchers'
+import Updates from './pages/Updates'
+import StatusLog from './pages/StatusLog'
 
 export default function App() {
   const { theme, fullscreen, isAuthenticated } = useApp()
@@ -32,6 +34,8 @@ export default function App() {
         <main className="flex-1 p-6 overflow-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/updates" element={<Updates />} />
+            <Route path="/updates/log" element={<StatusLog />} />
             <Route path="/oil" element={<OilFluids />} />
             <Route path="/inspections" element={<Inspections />} />
             <Route path="/registrations" element={<Registrations />} />

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { Truck, Moon, ArrowDownToLine, ArrowUpFromLine, Clock, CheckCircle, AlertTriangle, Package, ArrowRight } from 'lucide-react'
 import Modal from './Modal'
 import { useApp } from '../context/AppContext'
+import { OP_STATUS_CONFIG, type UnitOperationalStatus } from '../data/mock'
 
 function UnitSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { units } = useApp()
@@ -250,11 +252,155 @@ function AddRecordModal() {
   )
 }
 
+const STATUS_ICONS: Record<UnitOperationalStatus, typeof Truck> = {
+  rolling: Truck, sleeping: Moon, at_shipper: ArrowDownToLine, at_receiver: ArrowUpFromLine,
+  getting_late: Clock, on_time: CheckCircle, issue: AlertTriangle, no_load: Package,
+}
+
+const ALL_STATUSES: UnitOperationalStatus[] = ['rolling', 'on_time', 'getting_late', 'issue', 'at_shipper', 'at_receiver', 'sleeping', 'no_load']
+
+function UpdateStatusModal() {
+  const { modal, closeModal, updateUnitStatus, units, unitStatuses } = useApp()
+  const unitId = modal.data?.unitId as string
+  const unit = units.find(u => u.id === unitId)
+  const currentStatus = unitStatuses.find(s => s.unit_id === unitId)
+
+  const [selected, setSelected] = useState<UnitOperationalStatus | null>(null)
+  const [note, setNote] = useState('')
+  const [loadNumber, setLoadNumber] = useState('')
+  const [origin, setOrigin] = useState('')
+  const [destination, setDestination] = useState('')
+  const [eta, setEta] = useState('')
+
+  useEffect(() => {
+    if (currentStatus) {
+      setLoadNumber(currentStatus.load_number || '')
+      setOrigin(currentStatus.origin || '')
+      setDestination(currentStatus.destination || '')
+      setEta(currentStatus.eta ? currentStatus.eta.slice(0, 16) : '')
+    }
+    setSelected(null)
+    setNote('')
+  }, [currentStatus, modal.type])
+
+  if (modal.type !== 'update-status' || !unit) return null
+
+  const currentOp = currentStatus?.status || 'no_load'
+  const cfg = selected ? OP_STATUS_CONFIG[selected] : null
+  const currentCfg = OP_STATUS_CONFIG[currentOp]
+  const needsNote = selected === 'getting_late' || selected === 'issue'
+  const showRoute = selected && ['rolling', 'getting_late', 'on_time'].includes(selected)
+  const showLoad = selected && selected !== 'no_load' && selected !== 'sleeping'
+  const canSubmit = selected && selected !== currentOp && (!needsNote || note.trim())
+
+  const handleConfirm = () => {
+    if (!selected || !canSubmit) return
+    updateUnitStatus(unitId, selected, { note, load_number: loadNumber, origin, destination, eta })
+    closeModal()
+  }
+
+  return (
+    <Modal title={`Update Status — ${unit.unit_number}`} open onClose={closeModal} width="max-w-xl">
+      <div className="space-y-4">
+        {/* Current status */}
+        <div className="bg-navy-700 rounded-lg p-3 flex items-center gap-3">
+          <span className="text-xs text-slate-500">Current:</span>
+          <StatusBadge status={currentOp} label={currentCfg.label} pulse={currentCfg.pulse} />
+        </div>
+
+        {/* Status pills */}
+        <div className="grid grid-cols-4 gap-2">
+          {ALL_STATUSES.map(s => {
+            const c = OP_STATUS_CONFIG[s]
+            const Icon = STATUS_ICONS[s]
+            const isCurrent = s === currentOp
+            const isSelected = s === selected
+            return (
+              <button key={s} onClick={() => !isCurrent && setSelected(s)} disabled={isCurrent}
+                className={`flex flex-col items-center gap-1.5 p-2.5 rounded-lg border text-xs font-medium transition-colors ${
+                  isCurrent ? 'border-navy-600 text-slate-600 cursor-not-allowed opacity-40' :
+                  isSelected ? `${c.bgColor} ${c.borderColor} ${c.textColor} border` :
+                  'border-navy-600 text-slate-400 hover:text-slate-200 hover:border-navy-500'
+                }`}>
+                <Icon size={16} />
+                {c.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Change preview */}
+        {selected && selected !== currentOp && (
+          <div className="bg-navy-700 rounded-lg p-3 flex items-center justify-center gap-3">
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${currentCfg.bgColor} ${currentCfg.textColor} ${currentCfg.borderColor}`}>{currentCfg.label}</span>
+            <ArrowRight size={14} className="text-slate-500" />
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${cfg!.bgColor} ${cfg!.textColor} ${cfg!.borderColor}`}>{cfg!.label}</span>
+          </div>
+        )}
+
+        {/* Conditional fields */}
+        {selected && (
+          <div className="space-y-3">
+            <Field label={`Note${needsNote ? ' (required)' : ''}`}>
+              <textarea value={note} onChange={e => setNote(e.target.value)} placeholder={needsNote ? 'Describe the situation...' : 'Optional comment...'}
+                className={`w-full bg-navy-700 border rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent h-16 resize-none placeholder-slate-500 ${needsNote && !note.trim() ? 'border-orange-500/50' : 'border-navy-600'}`} />
+            </Field>
+            {showLoad && (
+              <Field label="Load Number">
+                <Input value={loadNumber} onChange={setLoadNumber} placeholder="LD-XXXX" />
+              </Field>
+            )}
+            {showRoute && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Origin"><Input value={origin} onChange={setOrigin} placeholder="City, State" /></Field>
+                <Field label="Destination"><Input value={destination} onChange={setDestination} placeholder="City, State" /></Field>
+              </div>
+            )}
+            {showRoute && (
+              <Field label="ETA">
+                <input type="datetime-local" value={eta} onChange={e => setEta(e.target.value)}
+                  className="w-full bg-navy-700 border border-navy-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+              </Field>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Btn onClick={closeModal} color="bg-navy-600 hover:bg-navy-500">Cancel</Btn>
+          <Btn onClick={handleConfirm} color={canSubmit ? (cfg ? `${selected === 'issue' ? 'bg-red-600 hover:bg-red-500' : selected === 'getting_late' ? 'bg-orange-600 hover:bg-orange-500' : 'bg-accent hover:bg-accent-hover'}` : 'bg-accent hover:bg-accent-hover') : 'bg-navy-600 text-slate-500 cursor-not-allowed'}>
+            Confirm
+          </Btn>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function StatusBadge({ status, label, pulse }: { status: string; label?: string; pulse?: boolean }) {
+  const styles: Record<string, string> = {
+    rolling: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    sleeping: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    at_shipper: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    at_receiver: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+    getting_late: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+    on_time: 'bg-green-500/15 text-green-400 border-green-500/30',
+    issue: 'bg-red-500/15 text-red-400 border-red-500/30',
+    no_load: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
+  }
+  const s = styles[status] || 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${s} ${pulse ? 'animate-pulse-slow' : ''}`}>
+      {label || status.replace('_', ' ')}
+    </span>
+  )
+}
+
 export default function GlobalModals() {
   return <>
     <MileageModal />
     <OilDoneModal />
     <CreateTruckModal />
     <AddRecordModal />
+    <UpdateStatusModal />
   </>
 }

@@ -3,9 +3,11 @@ import {
   units as initUnits, oilRecords as initOil, inspections as initInsp,
   registrations as initReg, repairs as initRepairs, defects as initDefects,
   drivers as initDrivers, dispatchers as initDispatchers, auditLog as initAudit,
+  unitStatuses as initUnitStatuses, unitStatusLog as initUnitStatusLog,
   type Unit, type OilRecord, type Inspection, type Registration,
   type Repair, type Defect, type Driver, type Dispatcher, type AuditEntry,
-  defaultOilThresholds,
+  type UnitStatus, type UnitStatusLogEntry, type UnitOperationalStatus,
+  OP_STATUS_CONFIG, defaultOilThresholds,
 } from '../data/mock'
 
 interface ModalState {
@@ -37,6 +39,8 @@ interface AppState {
   drivers: Driver[]
   dispatchers: Dispatcher[]
   auditLog: AuditEntry[]
+  unitStatuses: UnitStatus[]
+  unitStatusLog: UnitStatusLogEntry[]
   oilThresholds: { critical: number; warning: number; soon: number }
   theme: 'dark' | 'light'
   fullscreen: boolean
@@ -81,6 +85,8 @@ interface AppContextType extends AppState {
   addDefect: (data: { unit_id: string; description: string; severity: Defect['severity'] }) => void
   addInspection: (data: { unit_id: string; doc_number: string; inspection_date: string }) => void
   addRegistration: (data: { unit_id: string; state: string; plate_number: string; doc_number: string; reg_date: string }) => void
+  // Unit Status actions
+  updateUnitStatus: (unitId: string, newStatus: UnitOperationalStatus, fields: { note?: string; load_number?: string; origin?: string; destination?: string; eta?: string }) => void
   // Oil thresholds
   setOilThresholds: (t: { critical: number; warning: number; soon: number }) => void
   // Auth
@@ -154,6 +160,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [drivers, setDrivers] = useState<Driver[]>(structuredClone(initDrivers))
   const [dispatchers, setDispatchers] = useState<Dispatcher[]>(structuredClone(initDispatchers))
   const [auditLog, setAuditLog] = useState<AuditEntry[]>(structuredClone(initAudit))
+  const [unitStatuses, setUnitStatuses] = useState<UnitStatus[]>(structuredClone(initUnitStatuses))
+  const [unitStatusLog, setUnitStatusLog] = useState<UnitStatusLogEntry[]>(structuredClone(initUnitStatusLog))
   const [oilThresholds, setOilThresholds] = useState(defaultOilThresholds)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [fullscreen, setFullscreen] = useState(false)
@@ -390,6 +398,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addToast(`Access updated`)
   }, [addToast])
 
+  const updateUnitStatus = useCallback((unitId: string, newStatus: UnitOperationalStatus, fields: { note?: string; load_number?: string; origin?: string; destination?: string; eta?: string }) => {
+    const current = unitStatuses.find(s => s.unit_id === unitId)
+    const unit = units.find(u => u.id === unitId)
+    if (!unit) return
+    const now = new Date().toISOString()
+    const dispatcher = currentUser?.name || 'Admin'
+    const note = fields.note || ''
+    const load_number = newStatus === 'no_load' ? '' : (fields.load_number ?? current?.load_number ?? '')
+    const origin = newStatus === 'no_load' ? '' : (fields.origin ?? current?.origin ?? '')
+    const destination = newStatus === 'no_load' ? '' : (fields.destination ?? current?.destination ?? '')
+    const eta = newStatus === 'no_load' ? '' : (fields.eta ?? current?.eta ?? '')
+    const prevStatus = current?.status || null
+
+    if (current) {
+      setUnitStatuses(ss => ss.map(s => s.unit_id === unitId ? { ...s, status: newStatus, note, load_number, origin, destination, eta, updated_by: dispatcher, updated_at: now } : s))
+    } else {
+      setUnitStatuses(ss => [...ss, { id: String(Date.now()), unit_id: unitId, status: newStatus, note, load_number, origin, destination, eta, updated_by: dispatcher, updated_at: now }])
+    }
+
+    setUnitStatusLog(log => [{
+      id: String(Date.now()), unit_id: unitId, previous_status: prevStatus, new_status: newStatus,
+      note, load_number, changed_by: dispatcher, changed_at: now,
+    }, ...log])
+
+    const prevLabel = prevStatus ? OP_STATUS_CONFIG[prevStatus].label : '—'
+    const newLabel = OP_STATUS_CONFIG[newStatus].label
+    setAuditLog(a => addAuditEntry(a, unit.unit_number, 'Updates', `Status changed`, 'status', prevLabel, newLabel))
+    addToast(`${unit.unit_number} → ${newLabel}`, newStatus === 'issue' ? 'bg-red-500' : newStatus === 'getting_late' ? 'bg-orange-500' : 'bg-emerald-500')
+  }, [unitStatuses, units, currentUser, addToast])
+
   const toggleTheme = useCallback(() => setTheme(t => {
     const next = t === 'dark' ? 'light' : 'dark'
     document.documentElement.setAttribute('data-theme', next)
@@ -400,8 +438,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       isAuthenticated, currentUser,
-      units, oilRecords, inspections, registrations, repairs, defects, drivers, dispatchers, auditLog,
-      oilThresholds, setOilThresholds,
+      units, oilRecords, inspections, registrations, repairs, defects, drivers, dispatchers, auditLog, unitStatuses, unitStatusLog,
+      oilThresholds, setOilThresholds, updateUnitStatus,
       theme, fullscreen, searchQuery, modal, toasts, login, logout,
       updateMileage, sendForChange, completeOilChange, updateOilType, updateOilInterval,
       resolveDefect, reopenDefect, renewRegistration, updateRegistration, uploadRegDocument,

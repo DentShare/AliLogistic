@@ -17,6 +17,15 @@ const styles: Record<string, string> = {
   reviewing: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
   terminated: 'bg-red-500/15 text-red-400 border-red-500/30',
   sent: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+  // Operational statuses
+  rolling: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  sleeping: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+  at_shipper: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+  at_receiver: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+  getting_late: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+  on_time: 'bg-green-500/15 text-green-400 border-green-500/30',
+  issue: 'bg-red-500/15 text-red-400 border-red-500/30',
+  no_load: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
 }
 
 interface Props {

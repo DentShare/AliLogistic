@@ -1,18 +1,20 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle, Truck, Users, ClipboardList, Shield, LogOut } from 'lucide-react'
+import { LayoutDashboard, Radio, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle, Truck, Users, ClipboardList, Shield, LogOut } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { oilStatus } from '../data/mock'
 
 export default function Sidebar() {
   const location = useLocation()
-  const { oilRecords, inspections, defects, oilThresholds, currentUser, logout } = useApp()
+  const { oilRecords, inspections, defects, unitStatuses, oilThresholds, currentUser, logout } = useApp()
 
   const urgentOil = oilRecords.filter(o => oilStatus(o.remaining, o.change_interval, oilThresholds) === 'critical' || oilStatus(o.remaining, o.change_interval, oilThresholds) === 'warning').filter(o => !o.sent_for_change).length
   const urgentInsp = inspections.filter(i => i.days_remaining <= 30).length
   const activeDefects = defects.filter(d => d.status === 'active').length
+  const urgentStatuses = unitStatuses.filter(s => s.status === 'getting_late' || s.status === 'issue').length
 
   const nav = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/updates', icon: Radio, label: 'Updates', badge: urgentStatuses },
     { to: '/oil', icon: Droplets, label: 'Oil & Fluids', badge: urgentOil },
     { to: '/inspections', icon: ShieldCheck, label: 'DOT Inspection', badge: urgentInsp },
     { to: '/registrations', icon: FileText, label: 'Registration' },

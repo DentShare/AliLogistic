@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Truck, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Truck, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle, Radio } from 'lucide-react'
 import StatusBadge from '../components/StatusBadge'
 import { useApp } from '../context/AppContext'
-import { oilStatus, daysStatus } from '../data/mock'
+import { oilStatus, daysStatus, OP_STATUS_CONFIG } from '../data/mock'
 
-const tabs = ['Overview', 'Oil', 'Repairs', 'Defects', 'Timeline'] as const
+const tabs = ['Overview', 'Status', 'Oil', 'Repairs', 'Defects', 'Timeline'] as const
 
 export default function UnitProfile() {
   const { id } = useParams()
   const [tab, setTab] = useState<typeof tabs[number]>('Overview')
-  const { units, oilRecords, inspections, registrations, repairs, defects, drivers, oilThresholds, resolveDefect, reopenDefect, assignDriver, openModal } = useApp()
+  const { units, oilRecords, inspections, registrations, repairs, defects, drivers, unitStatuses, unitStatusLog, oilThresholds, resolveDefect, reopenDefect, assignDriver, openModal, currentUser } = useApp()
 
   const unit = units.find(u => u.id === id)
   if (!unit) return <div className="text-slate-400">Unit not found</div>
@@ -87,9 +87,18 @@ export default function UnitProfile() {
         </div>
       </div>
 
-      {tab === 'Overview' && (
+      {tab === 'Overview' && (() => {
+        const unitStatus = unitStatuses.find(s => s.unit_id === id)
+        const opStatus = unitStatus?.status || 'no_load'
+        const opCfg = OP_STATUS_CONFIG[opStatus]
+        return (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="bg-navy-800 rounded-xl border border-navy-700 p-4">
+              <div className="text-xs text-slate-500 mb-1">Operational Status</div>
+              <StatusBadge status={opStatus} label={opCfg.label} pulse={opCfg.pulse} />
+              {unitStatus?.load_number && <div className="text-xs font-mono text-slate-500 mt-1">{unitStatus.load_number}</div>}
+            </div>
             <div className="bg-navy-800 rounded-xl border border-navy-700 p-4">
               <div className="text-xs text-slate-500 mb-1">Mileage</div>
               <div className="text-xl font-bold font-mono text-white">{unit.mileage.toLocaleString()} mi</div>
@@ -143,7 +152,89 @@ export default function UnitProfile() {
             )}
           </div>
         </div>
-      )}
+        )
+      })()}
+
+      {tab === 'Status' && (() => {
+        const unitStatus = unitStatuses.find(s => s.unit_id === id)
+        const opStatus = unitStatus?.status || 'no_load'
+        const cfg = OP_STATUS_CONFIG[opStatus]
+        const statusHistory = unitStatusLog.filter(e => e.unit_id === id).slice(0, 10)
+        const isViewer = currentUser?.role === 'viewer'
+        return (
+          <div className="space-y-6">
+            {/* Current Status Card */}
+            <div className="bg-navy-800 rounded-xl border border-navy-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Radio size={18} className={cfg.textColor} />
+                  <span className="text-sm font-semibold text-slate-300">Current Operational Status</span>
+                </div>
+                {!isViewer && (
+                  <button onClick={() => openModal('update-status', { unitId: unit.id })}
+                    className="px-3 py-1.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors">
+                    Update Status
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-4 mb-4">
+                <StatusBadge status={opStatus} label={cfg.label} pulse={cfg.pulse} />
+                {unitStatus?.load_number && <span className="text-sm font-mono text-slate-400">{unitStatus.load_number}</span>}
+              </div>
+              {(unitStatus?.origin || unitStatus?.destination) && (
+                <div className="text-sm text-slate-400 mb-2">
+                  {unitStatus?.origin} → {unitStatus?.destination}
+                </div>
+              )}
+              {unitStatus?.eta && (
+                <div className="text-sm text-slate-500 mb-2">
+                  ETA: {new Date(unitStatus.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
+              {unitStatus?.note && <div className="text-sm text-slate-500 italic">{unitStatus.note}</div>}
+              {unitStatus?.updated_by && (
+                <div className="text-xs text-slate-600 mt-3">
+                  Updated by {unitStatus.updated_by} — {new Date(unitStatus.updated_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
+            </div>
+
+            {/* Status Timeline */}
+            <div className="bg-navy-800 rounded-xl border border-navy-700 p-6">
+              <h3 className="text-sm font-semibold text-slate-300 mb-4">Recent Status Changes</h3>
+              <div className="relative">
+                <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-navy-600" />
+                <div className="space-y-4">
+                  {statusHistory.map(e => {
+                    const newCfg = OP_STATUS_CONFIG[e.new_status]
+                    const prevCfg = e.previous_status ? OP_STATUS_CONFIG[e.previous_status] : null
+                    return (
+                      <div key={e.id} className="flex items-start gap-4 relative">
+                        <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center z-10" style={{ backgroundColor: newCfg.color + '33' }}>
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: newCfg.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="text-xs font-mono text-slate-500">
+                              {new Date(e.changed_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {prevCfg && <StatusBadge status={e.previous_status!} label={prevCfg.label} />}
+                            <ArrowRight size={10} className="text-slate-600" />
+                            <StatusBadge status={e.new_status} label={newCfg.label} />
+                          </div>
+                          {e.note && <p className="text-xs text-slate-500">{e.note}</p>}
+                          <span className="text-[10px] text-slate-600">by {e.changed_by}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {statusHistory.length === 0 && <div className="text-slate-500 text-sm ml-10">No status changes recorded.</div>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {tab === 'Oil' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

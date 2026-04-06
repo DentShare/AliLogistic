@@ -91,6 +91,43 @@ export interface Dispatcher {
   last_login?: string;
 }
 
+export type UnitOperationalStatus = 'rolling' | 'sleeping' | 'at_shipper' | 'at_receiver' | 'getting_late' | 'on_time' | 'issue' | 'no_load';
+
+export interface UnitStatus {
+  id: string;
+  unit_id: string;
+  status: UnitOperationalStatus;
+  note: string;
+  load_number: string;
+  origin: string;
+  destination: string;
+  eta: string;
+  updated_by: string;
+  updated_at: string;
+}
+
+export interface UnitStatusLogEntry {
+  id: string;
+  unit_id: string;
+  previous_status: UnitOperationalStatus | null;
+  new_status: UnitOperationalStatus;
+  note: string;
+  load_number: string;
+  changed_by: string;
+  changed_at: string;
+}
+
+export const OP_STATUS_CONFIG: Record<UnitOperationalStatus, { label: string; color: string; bgColor: string; textColor: string; borderColor: string; pulse?: boolean }> = {
+  rolling:      { label: 'Rolling',        color: '#22c55e', bgColor: 'bg-emerald-500/15', textColor: 'text-emerald-400', borderColor: 'border-emerald-500/30' },
+  sleeping:     { label: 'Sleeping',       color: '#3b82f6', bgColor: 'bg-blue-500/15',    textColor: 'text-blue-400',    borderColor: 'border-blue-500/30' },
+  at_shipper:   { label: 'At Shipper',     color: '#a855f7', bgColor: 'bg-purple-500/15',  textColor: 'text-purple-400',  borderColor: 'border-purple-500/30' },
+  at_receiver:  { label: 'At Receiver',    color: '#6366f1', bgColor: 'bg-indigo-500/15',  textColor: 'text-indigo-400',  borderColor: 'border-indigo-500/30' },
+  getting_late: { label: 'Getting Late',   color: '#f97316', bgColor: 'bg-orange-500/15',  textColor: 'text-orange-400',  borderColor: 'border-orange-500/30', pulse: true },
+  on_time:      { label: 'On Time',        color: '#4ade80', bgColor: 'bg-green-500/15',   textColor: 'text-green-400',   borderColor: 'border-green-500/30' },
+  issue:        { label: 'Issue',          color: '#ef4444', bgColor: 'bg-red-500/15',     textColor: 'text-red-400',     borderColor: 'border-red-500/30', pulse: true },
+  no_load:      { label: 'No Load',        color: '#6b7280', bgColor: 'bg-slate-500/15',   textColor: 'text-slate-400',   borderColor: 'border-slate-500/30' },
+};
+
 export interface AuditEntry {
   id: string;
   timestamp: string;
@@ -219,6 +256,37 @@ export const auditLog: AuditEntry[] = [
   { id: '8', timestamp: '2026-03-25 15:10', dispatcher: 'Alex Brown', unit_number: 'T-109', module: 'Defects', description: 'Resolved defect', field: 'status', old_value: 'Active', new_value: 'Resolved' },
   { id: '9', timestamp: '2026-03-25 09:00', dispatcher: 'Mike Johnson', unit_number: 'T-110', module: 'Registration', description: 'Updated registration', field: 'plate_number', old_value: 'TRK-4407', new_value: 'TRK-4408' },
   { id: '10', timestamp: '2026-03-24 14:55', dispatcher: 'Alex Brown', unit_number: 'T-101', module: 'Repairs', description: 'Added brake repair', field: 'cost', old_value: '—', new_value: '$1,850' },
+];
+
+export const unitStatuses: UnitStatus[] = [
+  { id: '1',  unit_id: '1',  status: 'rolling',      note: '',                                     load_number: 'LD-4521', origin: 'Dallas, TX',      destination: 'Atlanta, GA',     eta: '2026-04-07T14:00:00', updated_by: 'Mike Johnson', updated_at: '2026-04-06T08:30:00' },
+  { id: '2',  unit_id: '2',  status: 'at_shipper',   note: 'Waiting for loading dock',             load_number: 'LD-4522', origin: 'Los Angeles, CA', destination: 'Phoenix, AZ',     eta: '2026-04-06T18:00:00', updated_by: 'Alex Brown',   updated_at: '2026-04-06T07:15:00' },
+  { id: '3',  unit_id: '3',  status: 'issue',        note: 'Brake pressure warning light on',      load_number: 'LD-4510', origin: 'Houston, TX',     destination: 'Miami, FL',       eta: '',                    updated_by: 'Mike Johnson', updated_at: '2026-04-06T06:45:00' },
+  { id: '4',  unit_id: '4',  status: 'on_time',      note: '',                                     load_number: 'LD-4523', origin: 'Chicago, IL',     destination: 'Detroit, MI',     eta: '2026-04-06T16:30:00', updated_by: 'Alex Brown',   updated_at: '2026-04-06T09:00:00' },
+  { id: '5',  unit_id: '5',  status: 'getting_late',  note: 'Heavy traffic on I-75, 2h delay',     load_number: 'LD-4519', origin: 'Atlanta, GA',     destination: 'Nashville, TN',   eta: '2026-04-06T20:00:00', updated_by: 'Mike Johnson', updated_at: '2026-04-06T10:15:00' },
+  { id: '6',  unit_id: '6',  status: 'sleeping',     note: 'HOS rest — 8h break',                  load_number: 'LD-4524', origin: 'Jacksonville, FL',destination: 'Charlotte, NC',   eta: '2026-04-07T06:00:00', updated_by: 'Alex Brown',   updated_at: '2026-04-06T02:00:00' },
+  { id: '7',  unit_id: '7',  status: 'no_load',      note: '',                                     load_number: '',        origin: '',                destination: '',                eta: '',                    updated_by: 'Mike Johnson', updated_at: '2026-04-05T14:00:00' },
+  { id: '8',  unit_id: '8',  status: 'rolling',      note: '',                                     load_number: 'LD-4525', origin: 'Columbus, OH',    destination: 'Indianapolis, IN',eta: '2026-04-06T15:00:00', updated_by: 'Alex Brown',   updated_at: '2026-04-06T08:00:00' },
+  { id: '9',  unit_id: '9',  status: 'at_receiver',  note: 'Unloading in progress',                load_number: 'LD-4518', origin: 'Newark, NJ',     destination: 'Philadelphia, PA',eta: '',                    updated_by: 'Mike Johnson', updated_at: '2026-04-06T09:30:00' },
+  { id: '10', unit_id: '10', status: 'getting_late',  note: 'Delayed at weigh station',             load_number: 'LD-4526', origin: 'Pittsburgh, PA',  destination: 'Baltimore, MD',   eta: '2026-04-06T22:00:00', updated_by: 'Alex Brown',   updated_at: '2026-04-06T10:00:00' },
+];
+
+export const unitStatusLog: UnitStatusLogEntry[] = [
+  { id: '1',  unit_id: '5',  previous_status: 'rolling',      new_status: 'getting_late', note: 'Heavy traffic on I-75, 2h delay',  load_number: 'LD-4519', changed_by: 'Mike Johnson', changed_at: '2026-04-06T10:15:00' },
+  { id: '2',  unit_id: '10', previous_status: 'rolling',      new_status: 'getting_late', note: 'Delayed at weigh station',         load_number: 'LD-4526', changed_by: 'Alex Brown',   changed_at: '2026-04-06T10:00:00' },
+  { id: '3',  unit_id: '9',  previous_status: 'rolling',      new_status: 'at_receiver',  note: 'Unloading in progress',            load_number: 'LD-4518', changed_by: 'Mike Johnson', changed_at: '2026-04-06T09:30:00' },
+  { id: '4',  unit_id: '4',  previous_status: 'sleeping',     new_status: 'on_time',      note: '',                                 load_number: 'LD-4523', changed_by: 'Alex Brown',   changed_at: '2026-04-06T09:00:00' },
+  { id: '5',  unit_id: '1',  previous_status: 'sleeping',     new_status: 'rolling',      note: '',                                 load_number: 'LD-4521', changed_by: 'Mike Johnson', changed_at: '2026-04-06T08:30:00' },
+  { id: '6',  unit_id: '8',  previous_status: 'at_shipper',   new_status: 'rolling',      note: '',                                 load_number: 'LD-4525', changed_by: 'Alex Brown',   changed_at: '2026-04-06T08:00:00' },
+  { id: '7',  unit_id: '2',  previous_status: 'rolling',      new_status: 'at_shipper',   note: 'Waiting for loading dock',         load_number: 'LD-4522', changed_by: 'Alex Brown',   changed_at: '2026-04-06T07:15:00' },
+  { id: '8',  unit_id: '3',  previous_status: 'rolling',      new_status: 'issue',        note: 'Brake pressure warning light on',  load_number: 'LD-4510', changed_by: 'Mike Johnson', changed_at: '2026-04-06T06:45:00' },
+  { id: '9',  unit_id: '6',  previous_status: 'rolling',      new_status: 'sleeping',     note: 'HOS rest — 8h break',              load_number: 'LD-4524', changed_by: 'Alex Brown',   changed_at: '2026-04-06T02:00:00' },
+  { id: '10', unit_id: '7',  previous_status: 'at_receiver',  new_status: 'no_load',      note: '',                                 load_number: '',        changed_by: 'Mike Johnson', changed_at: '2026-04-05T14:00:00' },
+  { id: '11', unit_id: '1',  previous_status: 'rolling',      new_status: 'sleeping',     note: 'HOS rest',                         load_number: 'LD-4521', changed_by: 'Mike Johnson', changed_at: '2026-04-05T22:00:00' },
+  { id: '12', unit_id: '4',  previous_status: 'rolling',      new_status: 'sleeping',     note: 'HOS rest — 10h break',             load_number: 'LD-4523', changed_by: 'Alex Brown',   changed_at: '2026-04-05T23:30:00' },
+  { id: '13', unit_id: '5',  previous_status: 'at_shipper',   new_status: 'rolling',      note: 'Loaded and departing',             load_number: 'LD-4519', changed_by: 'Mike Johnson', changed_at: '2026-04-05T16:00:00' },
+  { id: '14', unit_id: '9',  previous_status: 'at_shipper',   new_status: 'rolling',      note: '',                                 load_number: 'LD-4518', changed_by: 'Mike Johnson', changed_at: '2026-04-05T10:00:00' },
+  { id: '15', unit_id: '3',  previous_status: 'at_shipper',   new_status: 'rolling',      note: '',                                 load_number: 'LD-4510', changed_by: 'Alex Brown',   changed_at: '2026-04-05T08:00:00' },
 ];
 
 export function getUnit(id: string) { return units.find(u => u.id === id); }
