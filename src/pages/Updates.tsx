@@ -104,7 +104,7 @@ export default function Updates() {
                 </div>
                 <div className="p-2 space-y-1.5 overflow-y-auto flex-1 min-h-0">
                   {items.map(({ unit, status: st, driverName }) => (
-                    <div key={unit.id} className={`bg-navy-900 rounded-lg px-2.5 py-2 border border-l-2 border-navy-700 hover:border-navy-600 transition-colors shadow-sm ${cfg.pulse ? 'animate-pulse-slow shadow-md' : ''}`} style={{ borderLeftColor: cfg.color, boxShadow: cfg.pulse ? `0 0 8px ${cfg.color}33` : `0 0 4px ${cfg.color}15` }}>
+                    <div key={unit.id} className={`rounded-lg px-2.5 py-2 border border-l-2 transition-all hover:scale-[1.02] ${cfg.pulse ? 'animate-pulse-slow' : ''}`} style={{ borderLeftColor: cfg.color, borderColor: `${cfg.color}40`, backgroundColor: `${cfg.color}0D`, boxShadow: cfg.pulse ? `0 0 16px ${cfg.color}30, inset 0 0 12px ${cfg.color}08` : `0 0 10px ${cfg.color}18` }}>
                       <div className="flex items-center justify-between">
                         <Link to={`/units/${unit.id}`} className="text-xs font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
                         {cfg.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: cfg.color }} />}

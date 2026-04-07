@@ -138,19 +138,26 @@ function Column({ title, color, count, children }: { title: string; color: strin
   )
 }
 
-const columnColors: Record<string, string> = {
-  'Oil Change Needed': 'border-l-red-500 shadow-red-500/10',
-  'Sent for Change': 'border-l-blue-500 shadow-blue-500/10',
-  'Inspection Due': 'border-l-yellow-500 shadow-yellow-500/10',
-  'Active Defects': 'border-l-red-500 shadow-red-500/10',
-  'Repairs': 'border-l-orange-500 shadow-orange-500/10',
-  'All Clear': 'border-l-emerald-500 shadow-emerald-500/10',
+const columnHex: Record<string, string> = {
+  'Oil Change Needed': '#ef4444',
+  'Sent for Change': '#3b82f6',
+  'Inspection Due': '#eab308',
+  'Active Defects': '#ef4444',
+  'Repairs': '#f97316',
+  'All Clear': '#10b981',
 }
 
 function TruckCard({ unit, detail, pulse, columnTitle }: { unit: { id: string; unit_number: string; driver: string; mileage: number }; detail: React.ReactNode; pulse?: boolean; columnTitle?: string }) {
-  const glow = columnTitle ? columnColors[columnTitle] || '' : ''
+  const hex = columnTitle ? columnHex[columnTitle] || null : null
   return (
-    <Link to={`/units/${unit.id}`} className={`block bg-navy-900 rounded-lg px-2.5 py-2 border border-l-2 border-navy-700 hover:border-accent/40 transition-colors shadow-sm ${glow} ${pulse ? 'animate-pulse-slow shadow-md' : ''}`}>
+    <Link to={`/units/${unit.id}`}
+      className={`block rounded-lg px-2.5 py-2 border border-l-2 transition-all hover:scale-[1.02] ${pulse ? 'animate-pulse-slow' : ''}`}
+      style={hex ? {
+        borderLeftColor: hex,
+        borderColor: `${hex}40`,
+        backgroundColor: `${hex}0D`,
+        boxShadow: pulse ? `0 0 16px ${hex}30, inset 0 0 12px ${hex}08` : `0 0 10px ${hex}18`,
+      } : { borderColor: '#1a1f2e', backgroundColor: '#0b0e14' }}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-white">{unit.unit_number}</span>
         {pulse && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}

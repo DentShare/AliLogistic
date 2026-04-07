@@ -80,6 +80,11 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
+/* Stronger card glow in light theme for visibility on bright backgrounds */
+[data-theme="light"] [style*="box-shadow"] {
+  filter: saturate(1.4) brightness(1.1);
+}
+
 @keyframes pulse-slow {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
