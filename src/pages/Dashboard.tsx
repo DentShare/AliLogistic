@@ -11,21 +11,35 @@ export default function Dashboard() {
   const [flash, setFlash] = useState(false)
   const prevSnapshot = useRef('')
 
-  // Detect data changes and update live indicator
+  // Track per-unit changes for flip animation
+  const [changedUnits, setChangedUnits] = useState<Set<string>>(new Set())
+
   useEffect(() => {
-    const snapshot = JSON.stringify({
-      statuses: unitStatuses.map(s => s.status + s.condition + s.updated_at).join(','),
-      mileage: units.map(u => u.mileage).join(','),
-      oil: oilRecords.map(o => o.remaining + (o.sent_for_change ? 'S' : '')).join(','),
-      defects: defects.filter(d => d.status === 'active').length,
-      repairs: repairs.filter(r => r.status !== 'working').length,
+    // Build per-unit snapshot
+    const snapshot: Record<string, string> = {}
+    units.forEach(u => {
+      const st = unitStatuses.find(s => s.unit_id === u.id)
+      const oilRem = oilRecords.filter(o => o.unit_id === u.id).map(o => o.remaining).join(',')
+      snapshot[u.id] = `${u.mileage}|${st?.status}|${st?.condition}|${st?.updated_at}|${oilRem}`
     })
-    if (prevSnapshot.current && prevSnapshot.current !== snapshot) {
+    const snapStr = JSON.stringify(snapshot)
+
+    if (prevSnapshot.current && prevSnapshot.current !== snapStr) {
+      // Find which units changed
+      const prev = JSON.parse(prevSnapshot.current) as Record<string, string>
+      const changed = new Set<string>()
+      for (const id of Object.keys(snapshot)) {
+        if (prev[id] !== snapshot[id]) changed.add(id)
+      }
+      if (changed.size > 0) {
+        setChangedUnits(changed)
+        setTimeout(() => setChangedUnits(new Set()), 1500)
+      }
       setLastChange(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
       setFlash(true)
       setTimeout(() => setFlash(false), 2000)
     }
-    prevSnapshot.current = snapshot
+    prevSnapshot.current = snapStr
   }, [unitStatuses, units, oilRecords, defects, repairs])
 
   useEffect(() => {
@@ -91,7 +105,7 @@ export default function Dashboard() {
       color: 'bg-emerald-500/20 text-emerald-400',
       count: rollingUnits.length,
       children: rollingUnits.map(s => { const u = getUnit(s.unit_id); return u ? (
-        <TruckCard key={s.id} unit={u} severity="good" extra={undefined} variant={variant} />
+        <TruckCard key={s.id} unit={u} severity="good" extra={undefined} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -100,7 +114,7 @@ export default function Dashboard() {
       color: 'bg-red-500/20 text-red-400',
       count: oilUrgent.length,
       children: oilUrgent.map(o => { const u = getUnit(o.unit_id); const st = oilStatus(o.remaining, o.change_interval, oilThresholds); return u ? (
-        <TruckCard key={o.id} unit={u} severity={st === 'critical' ? 'critical' : 'warning'} extra={`${o.remaining.toLocaleString()} mi`} variant={variant} />
+        <TruckCard key={o.id} unit={u} severity={st === 'critical' ? 'critical' : 'warning'} extra={`${o.remaining.toLocaleString()} mi`} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -109,7 +123,7 @@ export default function Dashboard() {
       color: 'bg-blue-500/20 text-blue-400',
       count: sentForChange.length,
       children: sentForChange.map(o => { const u = getUnit(o.unit_id); return u ? (
-        <TruckCard key={o.id} unit={u} severity="sent" extra="Sent" variant={variant} />
+        <TruckCard key={o.id} unit={u} severity="sent" extra="Sent" variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -118,7 +132,7 @@ export default function Dashboard() {
       color: 'bg-yellow-500/20 text-yellow-400',
       count: inspDue.length,
       children: inspDue.map(i => { const u = getUnit(i.unit_id); return u ? (
-        <TruckCard key={i.id} unit={u} severity={i.days_remaining < 0 ? 'expired' : i.days_remaining <= 7 ? 'critical' : 'warning'} extra={i.days_remaining < 0 ? `${Math.abs(i.days_remaining)}d exp` : `${i.days_remaining}d left`} variant={variant} />
+        <TruckCard key={i.id} unit={u} severity={i.days_remaining < 0 ? 'expired' : i.days_remaining <= 7 ? 'critical' : 'warning'} extra={i.days_remaining < 0 ? `${Math.abs(i.days_remaining)}d exp` : `${i.days_remaining}d left`} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -127,7 +141,7 @@ export default function Dashboard() {
       color: 'bg-red-500/20 text-red-400',
       count: activeDefects.length,
       children: activeDefects.map(d => { const u = getUnit(d.unit_id); return u ? (
-        <TruckCard key={d.id} unit={u} severity={d.severity} extra={d.severity} variant={variant} />
+        <TruckCard key={d.id} unit={u} severity={d.severity} extra={d.severity} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -136,7 +150,7 @@ export default function Dashboard() {
       color: 'bg-orange-500/20 text-orange-400',
       count: inRepair.length,
       children: inRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
-        <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} extra={r.status === 'sent' ? 'Sent' : 'In Repair'} variant={variant} />
+        <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} extra={r.status === 'sent' ? 'Sent' : 'In Repair'} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -145,7 +159,7 @@ export default function Dashboard() {
       color: 'bg-red-500/20 text-red-400',
       count: needsRepair.length,
       children: needsRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
-        <TruckCard key={r.id} unit={u} severity="needs_repair" extra="Needs Repair" variant={variant} />
+        <TruckCard key={r.id} unit={u} severity="needs_repair" extra="Needs Repair" variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -154,7 +168,7 @@ export default function Dashboard() {
       color: 'bg-emerald-500/20 text-emerald-400',
       count: clearUnits.length,
       children: clearUnits.map(u => (
-        <TruckCard key={u.id} unit={u} severity="good" extra="All Clear" variant={variant} />
+        <TruckCard key={u.id} unit={u} severity="good" extra="All Clear" variant={variant} changedUnits={changedUnits} />
       )),
     },
   ]
@@ -258,14 +272,17 @@ const severityHex: Record<string, string> = {
   moderate: '#f97316', low: '#eab308',
 }
 
-function TruckCard({ unit, severity = 'ok', extra, variant = 0 }: {
+function TruckCard({ unit, severity = 'ok', extra, variant = 0, changedUnits }: {
   unit: { id: string; unit_number: string; driver: string; mileage: number }
   severity?: string
   extra?: string
   variant?: number
+  changedUnits?: Set<string>
 }) {
   const hex = severityHex[severity] || '#3b82f6'
   const isPulse = severity === 'critical' || severity === 'expired' || severity === 'needs_repair'
+  const isChanged = changedUnits?.has(unit.id) || false
+  const glowClass = isPulse ? 'animate-critical-glow' : severity === 'warning' || severity === 'moderate' || severity === 'in_repair' ? 'animate-warning-glow' : ''
 
   // Variant 1: tiny colored chip, just unit number
   if (variant === 1) {
@@ -327,12 +344,11 @@ function TruckCard({ unit, severity = 'ok', extra, variant = 0 }: {
   // Variant 0 (default) and Variant 4 (same card rendering as default)
   return (
     <Link to={`/units/${unit.id}`}
-      className={`block rounded-md px-1.5 py-0.5 border border-l-2 transition-all hover:scale-[1.01] ${isPulse ? 'animate-pulse-slow' : ''}`}
+      className={`block rounded-md px-1.5 py-0.5 border border-l-2 transition-all hover:scale-[1.01] ${glowClass} ${isChanged ? 'animate-flip' : ''}`}
       style={{
         borderLeftColor: hex,
         borderColor: `${hex}35`,
         backgroundColor: `${hex}12`,
-        boxShadow: isPulse ? `0 0 14px ${hex}30` : `0 0 5px ${hex}12`,
       }}>
       <div className="flex items-center gap-1 justify-between">
         <div className="flex items-center gap-1 min-w-0">

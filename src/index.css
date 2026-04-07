@@ -118,6 +118,51 @@ body {
 }
 .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
 
+/* Airport split-flap flip animation */
+@keyframes airport-flip {
+  0% { transform: rotateX(0deg); opacity: 1; }
+  25% { transform: rotateX(90deg); opacity: 0.3; }
+  50% { transform: rotateX(90deg); opacity: 0; }
+  75% { transform: rotateX(-10deg); opacity: 0.8; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+.animate-flip {
+  animation: airport-flip 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+  backface-visibility: hidden;
+}
+
+/* Red critical glow — breathing background */
+@keyframes critical-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.15), inset 0 0 6px rgba(239, 68, 68, 0.05); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), inset 0 0 16px rgba(239, 68, 68, 0.12); }
+}
+.animate-critical-glow {
+  animation: critical-glow 1.5s ease-in-out infinite;
+}
+
+/* Orange warning glow */
+@keyframes warning-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(249, 115, 22, 0.1); }
+  50% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.3), inset 0 0 10px rgba(249, 115, 22, 0.08); }
+}
+.animate-warning-glow {
+  animation: warning-glow 2s ease-in-out infinite;
+}
+
+/* Green change flash */
+@keyframes change-flash {
+  0% { background-color: rgba(16, 185, 129, 0.25); transform: rotateX(0deg); }
+  20% { transform: rotateX(90deg); }
+  40% { transform: rotateX(-5deg); }
+  60% { background-color: rgba(16, 185, 129, 0.1); }
+  100% { background-color: transparent; transform: rotateX(0deg); }
+}
+.animate-change {
+  animation: change-flash 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+}
+
 @keyframes slideIn {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
