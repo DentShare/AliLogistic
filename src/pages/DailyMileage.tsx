@@ -1,157 +1,103 @@
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
 export default function DailyMileage() {
-  const { units, dailyMileage, drivers, addDailyMileage, currentUser } = useApp()
-  const [search, setSearch] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [mileageInput, setMileageInput] = useState('')
+  const { units, drivers, addDailyMileage, currentUser } = useApp()
+  const [inputs, setInputs] = useState<Record<string, string>>({})
 
   const isViewer = currentUser?.role === 'viewer'
-  const today = new Date().toISOString().slice(0, 10)
 
-  // Get last 7 dates
-  const dates: string[] = []
-  for (let i = 0; i < 7; i++) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    dates.push(d.toISOString().slice(0, 10))
+  const activeUnits = units.filter(u => u.status === 'active').sort((a, b) => a.unit_number.localeCompare(b.unit_number))
+
+  const setInput = (unitId: string, val: string) => {
+    setInputs(prev => ({ ...prev, [unitId]: val }))
   }
 
-  const activeUnits = units.filter(u => u.status === 'active')
-    .filter(u => {
-      if (!search) return true
-      const sq = search.toLowerCase()
-      const drv = drivers.find(d => d.unit_id === u.id)
-      return u.unit_number.toLowerCase().includes(sq) || u.driver.toLowerCase().includes(sq) || (drv?.name || '').toLowerCase().includes(sq)
+  const getDiff = (unitId: string) => {
+    const unit = units.find(u => u.id === unitId)
+    const val = Number(inputs[unitId])
+    if (!unit || !val || val <= unit.mileage) return null
+    return val - unit.mileage
+  }
+
+  const changedCount = activeUnits.filter(u => {
+    const val = Number(inputs[u.id])
+    return val && val > u.mileage
+  }).length
+
+  const handleSaveAll = () => {
+    activeUnits.forEach(u => {
+      const val = Number(inputs[u.id])
+      if (val && val > u.mileage) {
+        addDailyMileage(u.id, val)
+      }
     })
-    .sort((a, b) => a.unit_number.localeCompare(b.unit_number))
-
-  const getMileage = (unitId: string, date: string) => {
-    return dailyMileage.find(m => m.unit_id === unitId && m.date === date)
+    setInputs({})
   }
 
-  const getDailyDiff = (unitId: string, date: string, prevDate: string) => {
-    const curr = getMileage(unitId, date)
-    const prev = getMileage(unitId, prevDate)
-    if (curr && prev) return curr.mileage - prev.mileage
-    return null
+  // Initialize inputs with current mileage on first render
+  const getInputValue = (unitId: string, currentMileage: number) => {
+    return inputs[unitId] !== undefined ? inputs[unitId] : String(currentMileage)
   }
-
-  const handleSubmit = (unitId: string) => {
-    const val = Number(mileageInput)
-    if (val > 0) {
-      addDailyMileage(unitId, val)
-      setEditingId(null)
-      setMileageInput('')
-    }
-  }
-
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr + 'T12:00:00')
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-  }
-
-  // Stats
-  const todayEntries = dailyMileage.filter(m => m.date === today)
-  const totalToday = todayEntries.reduce((sum, m) => {
-    const prev = dailyMileage.find(p => p.unit_id === m.unit_id && p.date === dates[1])
-    return sum + (prev ? m.mileage - prev.mileage : 0)
-  }, 0)
 
   return (
     <div className="flex flex-col h-[calc(100vh-56px-48px)] gap-4">
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-lg font-bold text-white">Daily Mileage</h2>
-          <p className="text-xs text-slate-500">Enter current odometer reading for each unit daily</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <div className="text-xs text-slate-500">Updated today</div>
-            <div className="text-sm font-bold text-emerald-400">{todayEntries.length} / {activeUnits.length}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-slate-500">Total miles today</div>
-            <div className="text-sm font-bold font-mono text-accent">{totalToday.toLocaleString()} mi</div>
-          </div>
-          <div className="flex items-center bg-navy-800 border border-navy-700 rounded-lg px-2.5 py-1.5 gap-1.5">
-            <Search size={13} className="text-slate-500" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search units..."
-              className="bg-transparent text-xs text-white placeholder-slate-500 outline-none w-32" />
-          </div>
-        </div>
+        <h2 className="text-sm font-semibold text-slate-300">Daily Mileage Entry</h2>
+        {!isViewer && (
+          <button onClick={handleSaveAll} disabled={changedCount === 0}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${changedCount > 0 ? 'bg-accent text-white hover:bg-accent-hover' : 'bg-navy-700 text-slate-500 cursor-not-allowed'}`}>
+            <Save size={14} /> Save All ({changedCount})
+          </button>
+        )}
       </div>
 
       {/* Table */}
       <div className="bg-navy-800 rounded-xl border border-navy-700 overflow-auto flex-1 min-h-0">
-        <table className="w-full text-sm">
+        <table className="w-full">
           <thead className="sticky top-0 bg-navy-800 z-10">
             <tr className="border-b border-navy-700">
-              <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 uppercase sticky left-0 bg-navy-800 z-20 w-24">Unit</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 uppercase w-28">Driver</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-slate-500 uppercase w-28">Current</th>
-              {dates.map(date => (
-                <th key={date} className={`text-center px-2 py-2 text-xs font-semibold uppercase w-24 ${date === today ? 'text-accent' : 'text-slate-500'}`}>
-                  {date === today ? 'Today' : formatDate(date)}
-                </th>
-              ))}
-              {!isViewer && <th className="text-center px-2 py-2 text-xs font-semibold text-slate-500 uppercase w-28">Action</th>}
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-28">Unit</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Driver</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-40">Current Mileage</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-44">New Mileage</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-24">Diff</th>
             </tr>
           </thead>
           <tbody>
             {activeUnits.map(unit => {
               const drv = drivers.find(d => d.unit_id === unit.id)
-              const todayEntry = getMileage(unit.id, today)
-              const isEditing = editingId === unit.id
+              const diff = getDiff(unit.id)
               return (
-                <tr key={unit.id} className="border-b border-navy-700/50 hover:bg-navy-700/20">
-                  <td className="px-3 py-1.5 font-bold text-white sticky left-0 bg-navy-800 z-10">{unit.unit_number}</td>
-                  <td className="px-3 py-1.5 text-slate-400 text-xs truncate">{drv?.name || unit.driver}</td>
-                  <td className="px-3 py-1.5 text-right font-mono text-slate-300 text-xs">{unit.mileage.toLocaleString()}</td>
-                  {dates.map((date, i) => {
-                    const entry = getMileage(unit.id, date)
-                    const diff = i < dates.length - 1 ? getDailyDiff(unit.id, date, dates[i + 1]) : null
-                    return (
-                      <td key={date} className={`text-center px-2 py-1.5 ${date === today ? 'bg-accent/5' : ''}`}>
-                        {entry ? (
-                          <div>
-                            <div className="text-[10px] font-mono text-slate-400">{entry.mileage.toLocaleString()}</div>
-                            {diff !== null && diff > 0 && (
-                              <div className={`text-[9px] font-mono font-bold ${diff > 500 ? 'text-emerald-400' : diff > 200 ? 'text-blue-400' : 'text-slate-500'}`}>
-                                +{diff.toLocaleString()}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-slate-600">—</span>
-                        )}
-                      </td>
-                    )
-                  })}
-                  {!isViewer && (
-                    <td className="text-center px-2 py-1.5">
-                      {isEditing ? (
-                        <div className="flex items-center gap-1 justify-center">
-                          <input type="number" value={mileageInput} onChange={e => setMileageInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleSubmit(unit.id)}
-                            className="bg-navy-700 border border-navy-600 rounded px-1.5 py-0.5 text-xs text-white outline-none focus:border-accent w-20 font-mono"
-                            placeholder={String(unit.mileage)} autoFocus />
-                          <button onClick={() => handleSubmit(unit.id)} className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300">OK</button>
-                          <button onClick={() => { setEditingId(null); setMileageInput('') }} className="text-[10px] text-slate-500 hover:text-slate-300">X</button>
-                        </div>
-                      ) : todayEntry ? (
-                        <span className="text-[10px] text-emerald-500 font-medium">Done</span>
-                      ) : (
-                        <button onClick={() => { setEditingId(unit.id); setMileageInput(String(unit.mileage)) }}
-                          className="text-[10px] font-medium text-accent hover:text-accent-hover">
-                          Enter
-                        </button>
-                      )}
-                    </td>
-                  )}
+                <tr key={unit.id} className="border-b border-navy-700/30 hover:bg-navy-700/20">
+                  <td className="px-4 py-3 text-sm font-bold text-white">{unit.unit_number}</td>
+                  <td className="px-4 py-3 text-sm text-slate-400">{drv?.name || unit.driver}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="text-sm font-mono text-slate-300">{unit.mileage.toLocaleString()}</span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {!isViewer ? (
+                      <input
+                        type="number"
+                        value={getInputValue(unit.id, unit.mileage)}
+                        onChange={e => setInput(unit.id, e.target.value)}
+                        className="bg-navy-700 border border-navy-600 rounded-lg px-3 py-1.5 text-sm text-white font-mono text-center outline-none focus:border-accent w-32"
+                      />
+                    ) : (
+                      <span className="text-sm font-mono text-slate-500">{unit.mileage.toLocaleString()}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {diff ? (
+                      <span className={`text-sm font-mono font-semibold ${diff > 500 ? 'text-emerald-400' : diff > 200 ? 'text-blue-400' : 'text-slate-400'}`}>
+                        +{diff.toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-slate-600">—</span>
+                    )}
+                  </td>
                 </tr>
               )
             })}
