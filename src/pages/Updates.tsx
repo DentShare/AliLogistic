@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Truck, Moon, ArrowDownToLine, ArrowUpFromLine, Clock, CheckCircle, AlertTriangle, Package, LayoutGrid, List, History } from 'lucide-react'
+import { Truck, Moon, ArrowDownToLine, ArrowUpFromLine, Clock, CheckCircle, AlertTriangle, Package, LayoutGrid, List, History, Minimize } from 'lucide-react'
 import KpiCard from '../components/KpiCard'
 import StatusBadge from '../components/StatusBadge'
 import { useApp } from '../context/AppContext'
@@ -25,10 +25,17 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function Updates() {
-  const { units, unitStatuses, drivers, searchQuery, openModal, currentUser } = useApp()
+  const { units, unitStatuses, drivers, searchQuery, openModal, currentUser, fullscreen, toggleFullscreen } = useApp()
   const [view, setView] = useState<'kanban' | 'table'>('kanban')
 
   const isViewer = currentUser?.role === 'viewer'
+
+  useEffect(() => {
+    if (!fullscreen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') toggleFullscreen() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [fullscreen, toggleFullscreen])
 
   const enriched = units.map(u => {
     const st = unitStatuses.find(s => s.unit_id === u.id)
@@ -46,7 +53,12 @@ export default function Updates() {
   }, {} as Record<UnitOperationalStatus, number>)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px-48px)] gap-6">
+    <div className={`flex flex-col ${fullscreen ? 'h-screen p-4 gap-4' : 'h-[calc(100vh-56px-48px)] gap-6'}`}>
+      {fullscreen && (
+        <button onClick={toggleFullscreen} className="fixed top-4 right-4 z-50 p-2 bg-navy-800/80 border border-navy-700 rounded-lg text-slate-400 hover:text-white backdrop-blur-sm transition-colors" title="Exit fullscreen (Esc)">
+          <Minimize size={16} />
+        </button>
+      )}
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 shrink-0">
         <KpiCard title="Rolling" value={counts.rolling} icon={Truck} color="text-emerald-400" />

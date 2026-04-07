@@ -1,12 +1,20 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Truck, Droplets, ShieldCheck, AlertTriangle, DollarSign, Wrench } from 'lucide-react'
+import { Truck, Droplets, ShieldCheck, AlertTriangle, DollarSign, Wrench, Minimize } from 'lucide-react'
 import KpiCard from '../components/KpiCard'
 import StatusBadge from '../components/StatusBadge'
 import { useApp } from '../context/AppContext'
 import { oilStatus } from '../data/mock'
 
 export default function Dashboard() {
-  const { units, oilRecords, inspections, defects, repairs, searchQuery, oilThresholds } = useApp()
+  const { units, oilRecords, inspections, defects, repairs, searchQuery, oilThresholds, fullscreen, toggleFullscreen } = useApp()
+
+  useEffect(() => {
+    if (!fullscreen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') toggleFullscreen() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [fullscreen, toggleFullscreen])
 
   const filteredUnits = searchQuery
     ? units.filter(u => u.unit_number.toLowerCase().includes(searchQuery.toLowerCase()) || u.driver.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -37,7 +45,12 @@ export default function Dashboard() {
   const getUnit = (id: string) => units.find(u => u.id === id)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px-48px)] gap-6">
+    <div className={`flex flex-col ${fullscreen ? 'h-screen p-4 gap-4' : 'h-[calc(100vh-56px-48px)] gap-6'}`}>
+      {fullscreen && (
+        <button onClick={toggleFullscreen} className="fixed top-4 right-4 z-50 p-2 bg-navy-800/80 border border-navy-700 rounded-lg text-slate-400 hover:text-white backdrop-blur-sm transition-colors" title="Exit fullscreen (Esc)">
+          <Minimize size={16} />
+        </button>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 shrink-0">
         <KpiCard title="Fleet Size" value={activeUnits} icon={Truck} color="text-accent" />
         <KpiCard title="Oil Urgent" value={oilUrgent.length} icon={Droplets} color="text-orange-400" />

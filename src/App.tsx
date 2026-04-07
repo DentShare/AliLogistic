@@ -30,8 +30,8 @@ export default function App() {
     <div className="flex min-h-screen w-full bg-navy-950" data-theme={theme}>
       {!fullscreen && <Sidebar />}
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 p-6 overflow-auto">
+        {!fullscreen && <Header />}
+        <main className={`flex-1 overflow-auto ${fullscreen ? '' : 'p-6'}`}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/updates" element={<Updates />} />

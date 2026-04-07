@@ -4,6 +4,8 @@ import { useApp } from '../context/AppContext'
 
 const titles: Record<string, string> = {
   '/': 'Dashboard',
+  '/updates': 'Updates',
+  '/updates/log': 'Status Log',
   '/oil': 'Oil & Fluids',
   '/inspections': 'DOT Inspections',
   '/registrations': 'Registrations',
@@ -25,7 +27,11 @@ export default function Header() {
 
   return (
     <header className="h-14 bg-navy-900 border-b border-navy-700 flex items-center justify-between px-6 shrink-0">
-      <h1 className="text-lg font-semibold text-white">{title}</h1>
+      <h1 className="text-lg font-semibold text-white">
+        <span className="text-accent">AliLogistic</span>
+        <span className="text-slate-600 mx-2">/</span>
+        {title}
+      </h1>
       <div className="flex items-center gap-2">
         <div className="flex items-center bg-navy-800 rounded-lg px-3 py-1.5 gap-2 mr-2">
           <Search size={14} className="text-slate-500" />
