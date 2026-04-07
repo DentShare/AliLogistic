@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Truck, Droplets, ShieldCheck, AlertTriangle, DollarSign, Wrench, Minimize, Navigation } from 'lucide-react'
 import KpiCard from '../components/KpiCard'
-import StatusBadge from '../components/StatusBadge'
 import { useApp } from '../context/AppContext'
 import { oilStatus } from '../data/mock'
 
@@ -72,87 +71,52 @@ export default function Dashboard() {
       </div>
 
       <div className={`flex gap-3 pb-2 items-start flex-1 min-h-0 ${fullscreen ? '' : 'overflow-x-auto'}`}>
+        {/* Rolling: unit + driver only */}
         <Column stretch={fullscreen} title="Rolling" color="bg-emerald-500/20 text-emerald-400" count={rollingUnits.length}>
           {rollingUnits.map(s => { const u = getUnit(s.unit_id); return u ? (
-            <TruckCard key={s.id} unit={u} severity="good" detail={
-              <div>
-                {s.origin && s.destination && <div className="text-[10px] text-slate-400 truncate">{s.origin} → {s.destination}</div>}
-                {s.load_number && <div className="text-[10px] font-mono text-emerald-400">{s.load_number}</div>}
-              </div>
-            } />
+            <TruckCard key={s.id} unit={u} severity="good" detail={null} />
           ) : null })}
         </Column>
+        {/* Oil: remaining mi left of pulse dot */}
         <Column stretch={fullscreen} title="Oil Change Needed" color="bg-red-500/20 text-red-400" count={oilUrgent.length}>
           {oilUrgent.map(o => { const u = getUnit(o.unit_id); const st = oilStatus(o.remaining, o.change_interval, oilThresholds); return u ? (
-            <TruckCard key={o.id} unit={u} severity={st === 'critical' ? 'critical' : 'warning'} detail={
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-orange-400">{o.oil_type}</span>
-                <span className="text-[10px] font-mono text-red-400">{o.remaining.toLocaleString()} mi</span>
-              </div>
-            } />
+            <TruckCard key={o.id} unit={u} severity={st === 'critical' ? 'critical' : 'warning'} detail={null} extra={`${o.remaining.toLocaleString()} mi`} />
           ) : null })}
         </Column>
+        {/* Sent: "Sent" badge on first line */}
         <Column stretch={fullscreen} title="Sent for Change" color="bg-blue-500/20 text-blue-400" count={sentForChange.length}>
           {sentForChange.map(o => { const u = getUnit(o.unit_id); return u ? (
-            <TruckCard key={o.id} unit={u} severity="sent" detail={
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-blue-400">{o.oil_type}</span>
-                <StatusBadge status="sent" label="Sent" />
-              </div>
-            } />
+            <TruckCard key={o.id} unit={u} severity="sent" detail={null} extra="Sent" />
           ) : null })}
         </Column>
+        {/* Inspection: days left/expired left of dot */}
         <Column stretch={fullscreen} title="Inspection Due" color="bg-yellow-500/20 text-yellow-400" count={inspDue.length}>
           {inspDue.map(i => { const u = getUnit(i.unit_id); return u ? (
-            <TruckCard key={i.id} unit={u} severity={i.days_remaining < 0 ? 'expired' : i.days_remaining <= 7 ? 'critical' : 'warning'} detail={
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">{i.doc_number}</span>
-                <span className={`text-[10px] font-mono ${i.days_remaining < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
-                  {i.days_remaining < 0 ? `${Math.abs(i.days_remaining)}d exp` : `${i.days_remaining}d left`}
-                </span>
-              </div>
-            } />
+            <TruckCard key={i.id} unit={u} severity={i.days_remaining < 0 ? 'expired' : i.days_remaining <= 7 ? 'critical' : 'warning'} detail={null} extra={i.days_remaining < 0 ? `${Math.abs(i.days_remaining)}d exp` : `${i.days_remaining}d left`} />
           ) : null })}
         </Column>
+        {/* Defects: severity on first line instead of description */}
         <Column stretch={fullscreen} title="Active Defects" color="bg-red-500/20 text-red-400" count={activeDefects.length}>
           {activeDefects.map(d => { const u = getUnit(d.unit_id); return u ? (
-            <TruckCard key={d.id} unit={u} severity={d.severity} detail={
-              <div>
-                <p className="text-[10px] text-slate-400 line-clamp-1">{d.description}</p>
-                <StatusBadge status={d.severity} pulse={d.severity === 'critical'} />
-              </div>
-            } />
+            <TruckCard key={d.id} unit={u} severity={d.severity} detail={null} extra={d.severity} />
           ) : null })}
         </Column>
+        {/* In Repair: status on first line + cost */}
         <Column stretch={fullscreen} title="In Repair" color="bg-orange-500/20 text-orange-400" count={inRepair.length}>
           {inRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
-            <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} detail={
-              <div>
-                <p className="text-[10px] text-slate-400 line-clamp-1">{r.service}</p>
-                <div className="flex items-center justify-between">
-                  <StatusBadge status={r.status === 'sent' ? 'sent' : 'warning'} label={r.status === 'sent' ? 'Sent' : 'In Repair'} />
-                  <span className="text-[10px] font-mono text-slate-500">${r.cost.toLocaleString()}</span>
-                </div>
-              </div>
-            } />
+            <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} detail={null} extra={`${r.status === 'sent' ? 'Sent' : 'In Repair'}  $${r.cost.toLocaleString()}`} />
           ) : null })}
         </Column>
+        {/* Needs Repair: status + cost */}
         <Column stretch={fullscreen} title="Needs Repair" color="bg-red-500/20 text-red-400" count={needsRepair.length}>
           {needsRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
-            <TruckCard key={r.id} unit={u} severity="needs_repair" detail={
-              <div>
-                <p className="text-[10px] text-slate-400 line-clamp-1">{r.service}</p>
-                <div className="flex items-center justify-between">
-                  <StatusBadge status="critical" label="Needs Repair" pulse />
-                  <span className="text-[10px] font-mono text-slate-500">${r.cost.toLocaleString()}</span>
-                </div>
-              </div>
-            } />
+            <TruckCard key={r.id} unit={u} severity="needs_repair" detail={null} extra={`Needs Repair  $${r.cost.toLocaleString()}`} />
           ) : null })}
         </Column>
+        {/* All Clear: badge on first line right */}
         <Column stretch={fullscreen} title="All Clear" color="bg-emerald-500/20 text-emerald-400" count={clearUnits.length}>
           {clearUnits.map(u => (
-            <TruckCard key={u.id} unit={u} severity="good" detail={<StatusBadge status="good" label="All Clear" />} />
+            <TruckCard key={u.id} unit={u} severity="good" detail={null} extra="All Clear" />
           ))}
         </Column>
       </div>
@@ -172,11 +136,11 @@ function Column({ title, color, count, children, stretch }: { title: string; col
   return (
     <div className={`rounded-xl border border-navy-700 flex flex-col max-h-full ${stretch ? 'flex-1 min-w-0' : 'min-w-[200px] shrink-0'}`}
       style={{ backgroundColor: `${hex}08`, borderColor: `${hex}20` }}>
-      <div className="px-2.5 py-2 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${hex}20` }}>
+      <div className="px-2 py-1.5 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${hex}20` }}>
         <span className="text-xs font-semibold text-slate-300">{title}</span>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{count}</span>
       </div>
-      <div className="p-2 space-y-1.5 overflow-y-auto flex-1 min-h-0">{children}</div>
+      <div className="p-1.5 space-y-1 overflow-y-auto flex-1 min-h-0">{children}</div>
     </div>
   )
 }
@@ -188,30 +152,34 @@ const severityHex: Record<string, string> = {
   moderate: '#f97316', low: '#eab308',
 }
 
-function TruckCard({ unit, detail, severity = 'ok' }: {
+function TruckCard({ unit, detail, severity = 'ok', extra }: {
   unit: { id: string; unit_number: string; driver: string; mileage: number }
-  detail: React.ReactNode
+  detail?: React.ReactNode | null
   severity?: string
+  extra?: string
 }) {
   const hex = severityHex[severity] || '#3b82f6'
   const isPulse = severity === 'critical' || severity === 'expired' || severity === 'needs_repair'
   return (
     <Link to={`/units/${unit.id}`}
-      className={`block rounded-lg px-2.5 py-2 border border-l-2 transition-all hover:scale-[1.02] ${isPulse ? 'animate-pulse-slow' : ''}`}
+      className={`block rounded-md px-1.5 py-0.5 border border-l-2 transition-all hover:scale-[1.01] ${isPulse ? 'animate-pulse-slow' : ''}`}
       style={{
         borderLeftColor: hex,
         borderColor: `${hex}35`,
         backgroundColor: `${hex}12`,
-        boxShadow: isPulse ? `0 0 18px ${hex}35, inset 0 0 12px ${hex}0A` : `0 0 8px ${hex}18`,
+        boxShadow: isPulse ? `0 0 14px ${hex}30` : `0 0 5px ${hex}12`,
       }}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-white">{unit.unit_number}</span>
-          <span className="text-[10px] text-slate-400">{unit.driver}</span>
+      <div className="flex items-center gap-1 justify-between">
+        <div className="flex items-center gap-1 min-w-0">
+          <span className="text-xs font-bold text-white shrink-0">{unit.unit_number}</span>
+          <span className="text-[10px] text-slate-400 truncate">{unit.driver}</span>
         </div>
-        {isPulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: hex }} />}
+        <div className="flex items-center gap-1 shrink-0">
+          {extra && <span className="text-[10px] font-mono font-semibold" style={{ color: hex }}>{extra}</span>}
+          {isPulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: hex }} />}
+        </div>
       </div>
-      <div className="mt-1">{detail}</div>
+      {detail}
     </Link>
   )
 }
