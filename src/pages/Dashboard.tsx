@@ -71,8 +71,8 @@ export default function Dashboard() {
         <KpiCard title="Repair Costs" value={`$${(totalRepairCost / 1000).toFixed(1)}k`} icon={DollarSign} color="text-emerald-400" />
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 items-start flex-1 min-h-0">
-        <Column title="Rolling" color="bg-emerald-500/20 text-emerald-400" count={rollingUnits.length}>
+      <div className={`flex gap-3 pb-2 items-start flex-1 min-h-0 ${fullscreen ? '' : 'overflow-x-auto'}`}>
+        <Column stretch={fullscreen} title="Rolling" color="bg-emerald-500/20 text-emerald-400" count={rollingUnits.length}>
           {rollingUnits.map(s => { const u = getUnit(s.unit_id); return u ? (
             <TruckCard key={s.id} unit={u} severity="good" detail={
               <div>
@@ -82,7 +82,7 @@ export default function Dashboard() {
             } />
           ) : null })}
         </Column>
-        <Column title="Oil Change Needed" color="bg-red-500/20 text-red-400" count={oilUrgent.length}>
+        <Column stretch={fullscreen} title="Oil Change Needed" color="bg-red-500/20 text-red-400" count={oilUrgent.length}>
           {oilUrgent.map(o => { const u = getUnit(o.unit_id); const st = oilStatus(o.remaining, o.change_interval, oilThresholds); return u ? (
             <TruckCard key={o.id} unit={u} severity={st === 'critical' ? 'critical' : 'warning'} detail={
               <div className="flex items-center justify-between">
@@ -92,7 +92,7 @@ export default function Dashboard() {
             } />
           ) : null })}
         </Column>
-        <Column title="Sent for Change" color="bg-blue-500/20 text-blue-400" count={sentForChange.length}>
+        <Column stretch={fullscreen} title="Sent for Change" color="bg-blue-500/20 text-blue-400" count={sentForChange.length}>
           {sentForChange.map(o => { const u = getUnit(o.unit_id); return u ? (
             <TruckCard key={o.id} unit={u} severity="sent" detail={
               <div className="flex items-center justify-between">
@@ -102,7 +102,7 @@ export default function Dashboard() {
             } />
           ) : null })}
         </Column>
-        <Column title="Inspection Due" color="bg-yellow-500/20 text-yellow-400" count={inspDue.length}>
+        <Column stretch={fullscreen} title="Inspection Due" color="bg-yellow-500/20 text-yellow-400" count={inspDue.length}>
           {inspDue.map(i => { const u = getUnit(i.unit_id); return u ? (
             <TruckCard key={i.id} unit={u} severity={i.days_remaining < 0 ? 'expired' : i.days_remaining <= 7 ? 'critical' : 'warning'} detail={
               <div className="flex items-center justify-between">
@@ -114,7 +114,7 @@ export default function Dashboard() {
             } />
           ) : null })}
         </Column>
-        <Column title="Active Defects" color="bg-red-500/20 text-red-400" count={activeDefects.length}>
+        <Column stretch={fullscreen} title="Active Defects" color="bg-red-500/20 text-red-400" count={activeDefects.length}>
           {activeDefects.map(d => { const u = getUnit(d.unit_id); return u ? (
             <TruckCard key={d.id} unit={u} severity={d.severity} detail={
               <div>
@@ -124,7 +124,7 @@ export default function Dashboard() {
             } />
           ) : null })}
         </Column>
-        <Column title="In Repair" color="bg-orange-500/20 text-orange-400" count={inRepair.length}>
+        <Column stretch={fullscreen} title="In Repair" color="bg-orange-500/20 text-orange-400" count={inRepair.length}>
           {inRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
             <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} detail={
               <div>
@@ -137,7 +137,7 @@ export default function Dashboard() {
             } />
           ) : null })}
         </Column>
-        <Column title="Needs Repair" color="bg-red-500/20 text-red-400" count={needsRepair.length}>
+        <Column stretch={fullscreen} title="Needs Repair" color="bg-red-500/20 text-red-400" count={needsRepair.length}>
           {needsRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
             <TruckCard key={r.id} unit={u} severity="needs_repair" detail={
               <div>
@@ -150,7 +150,7 @@ export default function Dashboard() {
             } />
           ) : null })}
         </Column>
-        <Column title="All Clear" color="bg-emerald-500/20 text-emerald-400" count={clearUnits.length}>
+        <Column stretch={fullscreen} title="All Clear" color="bg-emerald-500/20 text-emerald-400" count={clearUnits.length}>
           {clearUnits.map(u => (
             <TruckCard key={u.id} unit={u} severity="good" detail={<StatusBadge status="good" label="All Clear" />} />
           ))}
@@ -167,10 +167,10 @@ const colHex: Record<string, string> = {
   'Needs Repair': '#ef4444', 'All Clear': '#10b981',
 }
 
-function Column({ title, color, count, children }: { title: string; color: string; count: number; children: React.ReactNode }) {
+function Column({ title, color, count, children, stretch }: { title: string; color: string; count: number; children: React.ReactNode; stretch?: boolean }) {
   const hex = colHex[title] || '#3b82f6'
   return (
-    <div className="rounded-xl border border-navy-700 min-w-[200px] flex flex-col max-h-full shrink-0"
+    <div className={`rounded-xl border border-navy-700 flex flex-col max-h-full ${stretch ? 'flex-1 min-w-0' : 'min-w-[200px] shrink-0'}`}
       style={{ backgroundColor: `${hex}08`, borderColor: `${hex}20` }}>
       <div className="px-2.5 py-2 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${hex}20` }}>
         <span className="text-xs font-semibold text-slate-300">{title}</span>
