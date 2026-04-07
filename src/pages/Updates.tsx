@@ -6,7 +6,7 @@ import StatusBadge from '../components/StatusBadge'
 import { useApp } from '../context/AppContext'
 import { OP_STATUS_CONFIG, type UnitOperationalStatus } from '../data/mock'
 
-const STATUS_ORDER: UnitOperationalStatus[] = ['rolling', 'on_time', 'getting_late', 'issue', 'at_shipper', 'at_receiver', 'sleeping', 'no_load']
+const SORT_ORDER: UnitOperationalStatus[] = ['issue', 'getting_late', 'rolling', 'on_time', 'at_shipper', 'at_receiver', 'sleeping', 'no_load']
 
 const STATUS_ICONS: Record<UnitOperationalStatus, typeof Truck> = {
   rolling: Truck, sleeping: Moon, at_shipper: ArrowDownToLine, at_receiver: ArrowUpFromLine,
@@ -26,7 +26,7 @@ function timeAgo(dateStr: string): string {
 
 export default function Updates() {
   const { units, unitStatuses, drivers, searchQuery, openModal, currentUser, fullscreen, toggleFullscreen } = useApp()
-  const [view, setView] = useState<'kanban' | 'table'>('kanban')
+  const [view, setView] = useState<'grid' | 'table'>('grid')
 
   const isViewer = currentUser?.role === 'viewer'
 
@@ -45,9 +45,9 @@ export default function Updates() {
     !searchQuery || e.unit.unit_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (e.status?.load_number || '').toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  ).sort((a, b) => SORT_ORDER.indexOf(a.opStatus) - SORT_ORDER.indexOf(b.opStatus))
 
-  const counts = STATUS_ORDER.reduce((acc, s) => {
+  const counts = SORT_ORDER.reduce((acc, s) => {
     acc[s] = enriched.filter(e => e.opStatus === s).length
     return acc
   }, {} as Record<UnitOperationalStatus, number>)
@@ -74,7 +74,7 @@ export default function Updates() {
       {/* Controls */}
       <div className="flex items-center justify-between shrink-0">
         <div className="flex gap-1 bg-navy-800 rounded-lg p-1 border border-navy-700">
-          <button onClick={() => setView('kanban')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${view === 'kanban' ? 'bg-accent text-white' : 'text-slate-400 hover:text-white'}`}>
+          <button onClick={() => setView('grid')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${view === 'grid' ? 'bg-accent text-white' : 'text-slate-400 hover:text-white'}`}>
             <LayoutGrid size={14} /> Board
           </button>
           <button onClick={() => setView('table')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${view === 'table' ? 'bg-accent text-white' : 'text-slate-400 hover:text-white'}`}>
@@ -86,57 +86,56 @@ export default function Updates() {
         </Link>
       </div>
 
-      {/* Kanban View */}
-      {view === 'kanban' && (
-        <div className="flex gap-3 overflow-x-auto pb-2 items-start flex-1 min-h-0">
-          {STATUS_ORDER.map(status => {
-            const cfg = OP_STATUS_CONFIG[status]
-            const Icon = STATUS_ICONS[status]
-            const items = enriched.filter(e => e.opStatus === status)
+      {/* Grid View */}
+      {view === 'grid' && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 overflow-y-auto flex-1 min-h-0 pb-2">
+          {enriched.map(({ unit, status: st, driverName, opStatus }) => {
+            const cfg = OP_STATUS_CONFIG[opStatus]
+            const Icon = STATUS_ICONS[opStatus]
             return (
-              <div key={status} className="rounded-xl border min-w-[220px] flex flex-col max-h-full shrink-0"
-                style={{ backgroundColor: `${cfg.color}08`, borderColor: `${cfg.color}20` }}>
-                <div className="px-2.5 py-2 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${cfg.color}20` }}>
-                  <div className="flex items-center gap-1.5">
-                    <Icon size={14} className={cfg.textColor} />
-                    <span className="text-xs font-semibold text-slate-300">{cfg.label}</span>
-                  </div>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor}`}>{items.length}</span>
+              <div key={unit.id}
+                className={`rounded-xl border border-l-4 transition-all hover:scale-[1.01] ${cfg.pulse ? 'animate-pulse-slow' : ''}`}
+                style={{
+                  borderLeftColor: cfg.color,
+                  borderColor: `${cfg.color}30`,
+                  backgroundColor: `${cfg.color}10`,
+                  boxShadow: cfg.pulse ? `0 0 20px ${cfg.color}35, inset 0 0 16px ${cfg.color}08` : `0 0 8px ${cfg.color}15`,
+                }}>
+                {/* Big status indicator */}
+                <div className="flex items-center gap-2 px-3 pt-3 pb-1">
+                  <Icon size={22} style={{ color: cfg.color }} />
+                  <span className="text-sm font-bold" style={{ color: cfg.color }}>{cfg.label.toUpperCase()}</span>
+                  {cfg.pulse && <span className="w-2 h-2 rounded-full animate-pulse ml-auto" style={{ backgroundColor: cfg.color }} />}
                 </div>
-                <div className="p-2 space-y-1.5 overflow-y-auto flex-1 min-h-0">
-                  {items.map(({ unit, status: st, driverName }) => (
-                    <div key={unit.id} className={`rounded-lg px-2.5 py-2 border border-l-2 transition-all hover:scale-[1.02] ${cfg.pulse ? 'animate-pulse-slow' : ''}`} style={{ borderLeftColor: cfg.color, borderColor: `${cfg.color}35`, backgroundColor: `${cfg.color}12`, boxShadow: cfg.pulse ? `0 0 18px ${cfg.color}35, inset 0 0 12px ${cfg.color}0A` : `0 0 8px ${cfg.color}18` }}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <Link to={`/units/${unit.id}`} className="text-xs font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
-                          <span className="text-[10px] text-slate-400">{driverName}</span>
-                        </div>
-                        {cfg.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: cfg.color }} />}
-                      </div>
-                      {st?.load_number && <div className="text-[10px] text-slate-500">{st.load_number}</div>}
-                      {(st?.origin || st?.destination) && (
-                        <div className="text-[10px] text-slate-500 truncate">{st?.origin} → {st?.destination}</div>
-                      )}
-                      {st?.eta && (
-                        <div className="text-[10px] text-slate-600">ETA: {new Date(st.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                      )}
-                      {st?.note && <div className="text-[10px] text-slate-600 italic line-clamp-1">{st.note}</div>}
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[9px] text-slate-600">{timeAgo(st?.updated_at || '')}</span>
-                        {!isViewer && (
-                          <button onClick={() => openModal('update-status', { unitId: unit.id })}
-                            className="text-[9px] font-medium text-accent hover:text-accent-hover transition-colors">
-                            Update
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {items.length === 0 && <div className="text-xs text-slate-600 text-center py-4">No units</div>}
+
+                {/* Unit info */}
+                <div className="px-3 pb-3">
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Link to={`/units/${unit.id}`} className="text-sm font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
+                    <span className="text-xs text-slate-400">{driverName}</span>
+                  </div>
+                  {st?.load_number && <div className="text-xs font-mono text-slate-400 mt-0.5">{st.load_number}</div>}
+                  {(st?.origin || st?.destination) && (
+                    <div className="text-xs text-slate-500 mt-0.5 truncate">{st?.origin} → {st?.destination}</div>
+                  )}
+                  {st?.eta && (
+                    <div className="text-xs text-slate-500 mt-0.5">ETA: {new Date(st.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                  )}
+                  {st?.note && <div className="text-xs text-slate-600 italic mt-0.5 line-clamp-1">{st.note}</div>}
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[9px] text-slate-600">{timeAgo(st?.updated_at || '')}</span>
+                    {!isViewer && (
+                      <button onClick={() => openModal('update-status', { unitId: unit.id })}
+                        className="text-xs font-medium text-accent hover:text-accent-hover transition-colors">
+                        Update
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )
           })}
+          {enriched.length === 0 && <div className="col-span-full text-center text-slate-500 py-12">No units match the search.</div>}
         </div>
       )}
 
@@ -152,7 +151,7 @@ export default function Updates() {
               </tr>
             </thead>
             <tbody>
-              {enriched.sort((a, b) => STATUS_ORDER.indexOf(a.opStatus) - STATUS_ORDER.indexOf(b.opStatus)).map(({ unit, status: st, driverName, opStatus }) => {
+              {enriched.map(({ unit, status: st, driverName, opStatus }) => {
                 const cfg = OP_STATUS_CONFIG[opStatus]
                 return (
                   <tr key={unit.id} className="border-b border-navy-700/50 hover:bg-navy-700/30">
