@@ -1,12 +1,32 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Truck, Droplets, ShieldCheck, AlertTriangle, Wrench, Minimize, Navigation } from 'lucide-react'
+import { Truck, Droplets, ShieldCheck, AlertTriangle, Wrench, Minimize, Navigation, Radio } from 'lucide-react'
 import KpiCard from '../components/KpiCard'
 import { useApp } from '../context/AppContext'
 import { oilStatus } from '../data/mock'
 
 export default function Dashboard() {
   const { units, oilRecords, inspections, defects, repairs, unitStatuses, searchQuery, oilThresholds, fullscreen, toggleFullscreen } = useApp()
+  const [lastChange, setLastChange] = useState<string>('')
+  const [flash, setFlash] = useState(false)
+  const prevSnapshot = useRef('')
+
+  // Detect data changes and update live indicator
+  useEffect(() => {
+    const snapshot = JSON.stringify({
+      statuses: unitStatuses.map(s => s.status + s.condition + s.updated_at).join(','),
+      mileage: units.map(u => u.mileage).join(','),
+      oil: oilRecords.map(o => o.remaining + (o.sent_for_change ? 'S' : '')).join(','),
+      defects: defects.filter(d => d.status === 'active').length,
+      repairs: repairs.filter(r => r.status !== 'working').length,
+    })
+    if (prevSnapshot.current && prevSnapshot.current !== snapshot) {
+      setLastChange(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+      setFlash(true)
+      setTimeout(() => setFlash(false), 2000)
+    }
+    prevSnapshot.current = snapshot
+  }, [unitStatuses, units, oilRecords, defects, repairs])
 
   useEffect(() => {
     if (!fullscreen) return
@@ -144,9 +164,16 @@ export default function Dashboard() {
   return (
     <div className={`flex flex-col ${fullscreen ? 'h-screen p-2 gap-1' : 'h-[calc(100vh-56px-48px)] gap-6'}`}>
       {fullscreen && (
-        <button onClick={toggleFullscreen} className="fixed top-3 right-3 z-50 p-2 bg-navy-800/80 border border-navy-700 rounded-lg text-slate-400 hover:text-white backdrop-blur-sm transition-colors" title="Exit fullscreen (Esc)">
-          <Minimize size={16} />
-        </button>
+        <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
+          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 bg-navy-800/80 border border-navy-700 rounded-lg backdrop-blur-sm transition-all ${flash ? 'border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]' : ''}`}>
+            <Radio size={12} className="text-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-semibold text-emerald-400">LIVE</span>
+            {lastChange && <span className="text-[9px] text-slate-500 ml-1">{lastChange}</span>}
+          </div>
+          <button onClick={toggleFullscreen} className="p-2 bg-navy-800/80 border border-navy-700 rounded-lg text-slate-400 hover:text-white backdrop-blur-sm transition-colors" title="Exit fullscreen (Esc)">
+            <Minimize size={16} />
+          </button>
+        </div>
       )}
 
       {/* KPI Row — hidden in fullscreen */}
@@ -159,6 +186,14 @@ export default function Dashboard() {
           <KpiCard title="Active Defects" value={activeDefects.length} icon={AlertTriangle} color="text-red-400" />
           <KpiCard title="In Repair" value={inRepair.length} icon={Wrench} color="text-orange-400" />
           <KpiCard title="Needs Repair" value={needsRepair.length} icon={AlertTriangle} color="text-red-400" />
+          {/* LIVE indicator */}
+          <div className={`bg-navy-800 rounded-xl border border-navy-700 p-4 flex flex-col items-center justify-center transition-all ${flash ? 'border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]' : ''}`}>
+            <div className="flex items-center gap-1.5">
+              <Radio size={14} className="text-emerald-400 animate-pulse" />
+              <span className="text-xs font-bold text-emerald-400">LIVE</span>
+            </div>
+            {lastChange && <div className="text-[9px] text-slate-500 mt-1">{lastChange}</div>}
+          </div>
         </div>
       )}
       {/* Fullscreen: count shown in column headers, no KPI needed */}
