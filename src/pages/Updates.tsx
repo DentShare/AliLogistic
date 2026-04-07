@@ -116,61 +116,52 @@ export default function Updates() {
               return (order[a.opStatus] ?? 3) - (order[b.opStatus] ?? 3)
             })
             return (
-              <div key={colStatus} className="rounded-xl border min-w-[240px] flex flex-col max-h-full shrink-0 flex-1"
+              <div key={colStatus} className="rounded-xl border min-w-[200px] flex flex-col max-h-full shrink-0 flex-1"
                 style={{ backgroundColor: `${colCfg.color}08`, borderColor: `${colCfg.color}20` }}>
-                <div className="px-3 py-2 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${colCfg.color}20` }}>
-                  <div className="flex items-center gap-1.5">
-                    <ColIcon size={15} className={colCfg.textColor} />
-                    <span className="text-xs font-semibold text-slate-300">{colCfg.label}</span>
+                <div className="px-2 py-1.5 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${colCfg.color}20` }}>
+                  <div className="flex items-center gap-1">
+                    <ColIcon size={13} className={colCfg.textColor} />
+                    <span className="text-[11px] font-semibold text-slate-300">{colCfg.label}</span>
                   </div>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${colCfg.bgColor} ${colCfg.textColor}`}>{items.length}</span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${colCfg.bgColor} ${colCfg.textColor}`}>{items.length}</span>
                 </div>
-                <div className="p-2 space-y-2 overflow-y-auto flex-1 min-h-0">
+                <div className="p-1.5 space-y-1 overflow-y-auto flex-1 min-h-0">
                   {items.map(({ unit, status: st, driverName, opStatus }) => {
                     const cardBadge = CARD_STATUS[opStatus]
-                    // Card color: if has special status (issue/late/on_time) use that color, otherwise use column color
                     const cardColor = cardBadge ? cardBadge.color : colCfg.color
                     const CardBadgeIcon = cardBadge?.icon
                     return (
                       <div key={unit.id}
-                        className={`rounded-lg border border-l-3 transition-all hover:scale-[1.01] ${cardBadge?.pulse ? 'animate-pulse-slow' : ''}`}
+                        className={`rounded-md border border-l-2 transition-all hover:scale-[1.01] px-2 py-1.5 ${cardBadge?.pulse ? 'animate-pulse-slow' : ''}`}
                         style={{
                           borderLeftColor: cardColor,
                           borderColor: `${cardColor}35`,
                           backgroundColor: `${cardColor}12`,
-                          boxShadow: cardBadge?.pulse ? `0 0 16px ${cardColor}35, inset 0 0 10px ${cardColor}08` : `0 0 6px ${cardColor}15`,
+                          boxShadow: cardBadge?.pulse ? `0 0 14px ${cardColor}30` : `0 0 5px ${cardColor}12`,
                         }}>
-                        {/* Card-level status badge (Issue / Getting Late / On Time) */}
-                        {cardBadge && (
-                          <div className="flex items-center gap-1.5 px-2.5 pt-2 pb-0.5">
-                            {CardBadgeIcon && <CardBadgeIcon size={16} style={{ color: cardColor }} />}
-                            <span className="text-xs font-bold" style={{ color: cardColor }}>{cardBadge.label}</span>
-                            {cardBadge.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse ml-auto" style={{ backgroundColor: cardColor }} />}
+                        {/* Status badge + Unit on same line */}
+                        <div className="flex items-center gap-1.5 justify-between">
+                          <div className="flex items-center gap-1 min-w-0">
+                            {cardBadge && CardBadgeIcon && <CardBadgeIcon size={12} style={{ color: cardColor }} />}
+                            {cardBadge && <span className="text-[10px] font-bold" style={{ color: cardColor }}>{cardBadge.label}</span>}
+                            <Link to={`/units/${unit.id}`} className={`text-[11px] font-bold text-white hover:text-accent ${cardBadge ? 'ml-1' : ''}`}>{unit.unit_number}</Link>
+                            <span className="text-[9px] text-slate-400 truncate">{driverName}</span>
                           </div>
+                          {cardBadge?.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ backgroundColor: cardColor }} />}
+                        </div>
+                        {/* Route + load in one line */}
+                        {(st?.origin || st?.load_number) && (
+                          <div className="text-[9px] text-slate-500 truncate">{st?.load_number}{st?.origin && st?.destination ? ` · ${st.origin} → ${st.destination}` : ''}</div>
                         )}
-                        {/* Unit info */}
-                        <div className={`px-2.5 ${cardBadge ? 'pt-0.5' : 'pt-2'} pb-2`}>
-                          <div className="flex items-center gap-1.5">
-                            <Link to={`/units/${unit.id}`} className="text-xs font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
-                            <span className="text-[10px] text-slate-400">{driverName}</span>
-                          </div>
-                          {st?.load_number && <div className="text-[10px] font-mono text-slate-400 mt-0.5">{st.load_number}</div>}
-                          {(st?.origin || st?.destination) && (
-                            <div className="text-[10px] text-slate-500 truncate">{st?.origin} → {st?.destination}</div>
+                        {st?.note && <div className="text-[9px] text-slate-600 italic truncate">{st.note}</div>}
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] text-slate-600">{timeAgo(st?.updated_at || '')}{st?.eta ? ` · ETA ${new Date(st.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}</span>
+                          {!isViewer && (
+                            <button onClick={() => openModal('update-status', { unitId: unit.id })}
+                              className="text-[9px] font-medium text-accent hover:text-accent-hover">
+                              Update
+                            </button>
                           )}
-                          {st?.eta && (
-                            <div className="text-[10px] text-slate-500">ETA: {new Date(st.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                          )}
-                          {st?.note && <div className="text-[10px] text-slate-600 italic line-clamp-1">{st.note}</div>}
-                          <div className="flex items-center justify-between mt-1.5">
-                            <span className="text-[9px] text-slate-600">{timeAgo(st?.updated_at || '')}</span>
-                            {!isViewer && (
-                              <button onClick={() => openModal('update-status', { unitId: unit.id })}
-                                className="text-[10px] font-medium text-accent hover:text-accent-hover transition-colors">
-                                Update
-                              </button>
-                            )}
-                          </div>
                         </div>
                       </div>
                     )
