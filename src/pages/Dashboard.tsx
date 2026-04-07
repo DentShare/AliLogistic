@@ -62,8 +62,8 @@ export default function Dashboard() {
 
       <div className="flex gap-4 overflow-x-auto pb-2 items-start flex-1 min-h-0">
         <Column title="Oil Change Needed" color="bg-red-500/20 text-red-400" count={oilUrgent.length}>
-          {oilUrgent.map(o => { const u = getUnit(o.unit_id); return u ? (
-            <TruckCard key={o.id} unit={u} pulse columnTitle="Oil Change Needed" detail={
+          {oilUrgent.map(o => { const u = getUnit(o.unit_id); const st = oilStatus(o.remaining, o.change_interval, oilThresholds); return u ? (
+            <TruckCard key={o.id} unit={u} severity={st === 'critical' ? 'critical' : 'warning'} detail={
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-orange-400">{o.oil_type}</span>
                 <span className="text-[10px] font-mono text-red-400">{o.remaining.toLocaleString()} mi</span>
@@ -73,7 +73,7 @@ export default function Dashboard() {
         </Column>
         <Column title="Sent for Change" color="bg-blue-500/20 text-blue-400" count={sentForChange.length}>
           {sentForChange.map(o => { const u = getUnit(o.unit_id); return u ? (
-            <TruckCard key={o.id} unit={u} columnTitle="Sent for Change" detail={
+            <TruckCard key={o.id} unit={u} severity="sent" detail={
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-blue-400">{o.oil_type}</span>
                 <StatusBadge status="sent" label="Sent" />
@@ -83,7 +83,7 @@ export default function Dashboard() {
         </Column>
         <Column title="Inspection Due" color="bg-yellow-500/20 text-yellow-400" count={inspDue.length}>
           {inspDue.map(i => { const u = getUnit(i.unit_id); return u ? (
-            <TruckCard key={i.id} unit={u} pulse={i.days_remaining < 0} columnTitle="Inspection Due" detail={
+            <TruckCard key={i.id} unit={u} severity={i.days_remaining < 0 ? 'expired' : i.days_remaining <= 7 ? 'critical' : 'warning'} detail={
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-slate-400">{i.doc_number}</span>
                 <span className={`text-[10px] font-mono ${i.days_remaining < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
@@ -95,7 +95,7 @@ export default function Dashboard() {
         </Column>
         <Column title="Active Defects" color="bg-red-500/20 text-red-400" count={activeDefects.length}>
           {activeDefects.map(d => { const u = getUnit(d.unit_id); return u ? (
-            <TruckCard key={d.id} unit={u} pulse={d.severity === 'critical'} columnTitle="Active Defects" detail={
+            <TruckCard key={d.id} unit={u} severity={d.severity} detail={
               <div>
                 <p className="text-[10px] text-slate-400 line-clamp-1">{d.description}</p>
                 <StatusBadge status={d.severity} pulse={d.severity === 'critical'} />
@@ -105,7 +105,7 @@ export default function Dashboard() {
         </Column>
         <Column title="Repairs" color="bg-orange-500/20 text-orange-400" count={activeRepairs.length}>
           {activeRepairs.map(r => { const u = getUnit(r.unit_id); return u ? (
-            <TruckCard key={r.id} unit={u} columnTitle="Repairs" detail={
+            <TruckCard key={r.id} unit={u} severity={r.status === 'needs_repair' ? 'needs_repair' : r.status === 'sent' ? 'sent' : 'in_repair'} detail={
               <div>
                 <p className="text-[10px] text-slate-400 line-clamp-1">{r.service}</p>
                 <div className="flex items-center justify-between">
@@ -118,7 +118,7 @@ export default function Dashboard() {
         </Column>
         <Column title="All Clear" color="bg-emerald-500/20 text-emerald-400" count={clearUnits.length}>
           {clearUnits.map(u => (
-            <TruckCard key={u.id} unit={u} columnTitle="All Clear" detail={<StatusBadge status="good" label="All Clear" />} />
+            <TruckCard key={u.id} unit={u} severity="good" detail={<StatusBadge status="good" label="All Clear" />} />
           ))}
         </Column>
       </div>
@@ -126,10 +126,18 @@ export default function Dashboard() {
   )
 }
 
+// Column hex colors for tinted backgrounds
+const colHex: Record<string, string> = {
+  'Oil Change Needed': '#ef4444', 'Sent for Change': '#3b82f6', 'Inspection Due': '#eab308',
+  'Active Defects': '#ef4444', 'Repairs': '#f97316', 'All Clear': '#10b981',
+}
+
 function Column({ title, color, count, children }: { title: string; color: string; count: number; children: React.ReactNode }) {
+  const hex = colHex[title] || '#3b82f6'
   return (
-    <div className="bg-navy-800 rounded-xl border border-navy-700 min-w-[220px] flex flex-col max-h-full shrink-0">
-      <div className="px-2.5 py-2 border-b border-navy-700 flex items-center justify-between shrink-0">
+    <div className="rounded-xl border border-navy-700 min-w-[220px] flex flex-col max-h-full shrink-0"
+      style={{ backgroundColor: `${hex}08`, borderColor: `${hex}20` }}>
+      <div className="px-2.5 py-2 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${hex}20` }}>
         <span className="text-xs font-semibold text-slate-300">{title}</span>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{count}</span>
       </div>
@@ -138,29 +146,32 @@ function Column({ title, color, count, children }: { title: string; color: strin
   )
 }
 
-const columnHex: Record<string, string> = {
-  'Oil Change Needed': '#ef4444',
-  'Sent for Change': '#3b82f6',
-  'Inspection Due': '#eab308',
-  'Active Defects': '#ef4444',
-  'Repairs': '#f97316',
-  'All Clear': '#10b981',
+// Card severity colors: each card colored by its own status
+const severityHex: Record<string, string> = {
+  critical: '#ef4444', expired: '#ef4444', warning: '#f97316', needs_repair: '#ef4444',
+  sent: '#3b82f6', in_repair: '#f97316', ok: '#eab308', good: '#10b981',
+  moderate: '#f97316', low: '#eab308',
 }
 
-function TruckCard({ unit, detail, pulse, columnTitle }: { unit: { id: string; unit_number: string; driver: string; mileage: number }; detail: React.ReactNode; pulse?: boolean; columnTitle?: string }) {
-  const hex = columnTitle ? columnHex[columnTitle] || null : null
+function TruckCard({ unit, detail, severity = 'ok' }: {
+  unit: { id: string; unit_number: string; driver: string; mileage: number }
+  detail: React.ReactNode
+  severity?: string
+}) {
+  const hex = severityHex[severity] || '#3b82f6'
+  const isPulse = severity === 'critical' || severity === 'expired' || severity === 'needs_repair'
   return (
     <Link to={`/units/${unit.id}`}
-      className={`block rounded-lg px-2.5 py-2 border border-l-2 transition-all hover:scale-[1.02] ${pulse ? 'animate-pulse-slow' : ''}`}
-      style={hex ? {
+      className={`block rounded-lg px-2.5 py-2 border border-l-2 transition-all hover:scale-[1.02] ${isPulse ? 'animate-pulse-slow' : ''}`}
+      style={{
         borderLeftColor: hex,
-        borderColor: `${hex}40`,
-        backgroundColor: `${hex}0D`,
-        boxShadow: pulse ? `0 0 16px ${hex}30, inset 0 0 12px ${hex}08` : `0 0 10px ${hex}18`,
-      } : { borderColor: '#1a1f2e', backgroundColor: '#0b0e14' }}>
+        borderColor: `${hex}35`,
+        backgroundColor: `${hex}12`,
+        boxShadow: isPulse ? `0 0 18px ${hex}35, inset 0 0 12px ${hex}0A` : `0 0 8px ${hex}18`,
+      }}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-white">{unit.unit_number}</span>
-        {pulse && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+        {isPulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: hex }} />}
       </div>
       <div className="text-[10px] text-slate-500">{unit.driver} · {unit.mileage.toLocaleString()} mi</div>
       <div className="mt-1">{detail}</div>
