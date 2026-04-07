@@ -107,10 +107,13 @@ export default function Updates() {
                   {items.map(({ unit, status: st, driverName }) => (
                     <div key={unit.id} className={`rounded-lg px-2.5 py-2 border border-l-2 transition-all hover:scale-[1.02] ${cfg.pulse ? 'animate-pulse-slow' : ''}`} style={{ borderLeftColor: cfg.color, borderColor: `${cfg.color}35`, backgroundColor: `${cfg.color}12`, boxShadow: cfg.pulse ? `0 0 18px ${cfg.color}35, inset 0 0 12px ${cfg.color}0A` : `0 0 8px ${cfg.color}18` }}>
                       <div className="flex items-center justify-between">
-                        <Link to={`/units/${unit.id}`} className="text-xs font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
+                        <div className="flex items-center gap-1.5">
+                          <Link to={`/units/${unit.id}`} className="text-xs font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
+                          <span className="text-[10px] text-slate-400">{driverName}</span>
+                        </div>
                         {cfg.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: cfg.color }} />}
                       </div>
-                      <div className="text-[10px] text-slate-500">{driverName}{st?.load_number ? ` · ${st.load_number}` : ''}</div>
+                      {st?.load_number && <div className="text-[10px] text-slate-500">{st.load_number}</div>}
                       {(st?.origin || st?.destination) && (
                         <div className="text-[10px] text-slate-500 truncate">{st?.origin} → {st?.destination}</div>
                       )}

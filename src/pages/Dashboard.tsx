@@ -170,10 +170,12 @@ function TruckCard({ unit, detail, severity = 'ok' }: {
         boxShadow: isPulse ? `0 0 18px ${hex}35, inset 0 0 12px ${hex}0A` : `0 0 8px ${hex}18`,
       }}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-white">{unit.unit_number}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-white">{unit.unit_number}</span>
+          <span className="text-[10px] text-slate-400">{unit.driver}</span>
+        </div>
         {isPulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: hex }} />}
       </div>
-      <div className="text-[10px] text-slate-500">{unit.driver} · {unit.mileage.toLocaleString()} mi</div>
       <div className="mt-1">{detail}</div>
     </Link>
   )
