@@ -139,30 +139,29 @@ export default function Updates() {
                           backgroundColor: `${cardColor}12`,
                           boxShadow: cardBadge?.pulse ? `0 0 14px ${cardColor}30` : `0 0 5px ${cardColor}12`,
                         }}>
-                        {/* Status badge + Unit on same line */}
-                        <div className="flex items-center gap-1.5 justify-between">
+                        {/* Line 1: status + unit + driver + time + Update */}
+                        <div className="flex items-center gap-1 justify-between">
                           <div className="flex items-center gap-1 min-w-0">
-                            {cardBadge && CardBadgeIcon && <CardBadgeIcon size={12} style={{ color: cardColor }} />}
-                            {cardBadge && <span className="text-[10px] font-bold" style={{ color: cardColor }}>{cardBadge.label}</span>}
-                            <Link to={`/units/${unit.id}`} className={`text-[11px] font-bold text-white hover:text-accent ${cardBadge ? 'ml-1' : ''}`}>{unit.unit_number}</Link>
+                            {cardBadge && CardBadgeIcon && <CardBadgeIcon size={11} style={{ color: cardColor }} />}
+                            {cardBadge && <span className="text-[9px] font-bold" style={{ color: cardColor }}>{cardBadge.label}</span>}
+                            <Link to={`/units/${unit.id}`} className={`text-[11px] font-bold text-white hover:text-accent ${cardBadge ? 'ml-0.5' : ''}`}>{unit.unit_number}</Link>
                             <span className="text-[9px] text-slate-400 truncate">{driverName}</span>
                           </div>
-                          {cardBadge?.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ backgroundColor: cardColor }} />}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[8px] text-slate-600">{timeAgo(st?.updated_at || '')}</span>
+                            {!isViewer && (
+                              <button onClick={() => openModal('update-status', { unitId: unit.id })}
+                                className="text-[9px] font-medium text-accent hover:text-accent-hover">
+                                Update
+                              </button>
+                            )}
+                            {cardBadge?.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: cardColor }} />}
+                          </div>
                         </div>
-                        {/* Route + load in one line */}
+                        {/* Line 2: load + route */}
                         {(st?.origin || st?.load_number) && (
                           <div className="text-[9px] text-slate-500 truncate">{st?.load_number}{st?.origin && st?.destination ? ` · ${st.origin} → ${st.destination}` : ''}</div>
                         )}
-                        {st?.note && <div className="text-[9px] text-slate-600 italic truncate">{st.note}</div>}
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8px] text-slate-600">{timeAgo(st?.updated_at || '')}{st?.eta ? ` · ETA ${new Date(st.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}</span>
-                          {!isViewer && (
-                            <button onClick={() => openModal('update-status', { unitId: unit.id })}
-                              className="text-[9px] font-medium text-accent hover:text-accent-hover">
-                              Update
-                            </button>
-                          )}
-                        </div>
                       </div>
                     )
                   })}
