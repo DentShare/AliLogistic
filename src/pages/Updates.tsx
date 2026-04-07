@@ -142,7 +142,7 @@ export default function Updates() {
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${colCfg.bgColor} ${colCfg.textColor}`}>{items.length}</span>
                   </div>
-                  <div className="p-1 space-y-0.5 overflow-y-auto flex-1 min-h-0">
+                  <div className={`p-1 flex-1 min-h-0 overflow-y-auto ${items.length > 40 ? 'grid grid-cols-2 gap-0.5 auto-rows-min content-start' : 'space-y-0.5'}`}>
                     {items.map(({ unit, status: st, driverName }) => {
                       const cond = st?.condition
                       const condCfg = cond ? CONDITION_CONFIG[cond] : null
