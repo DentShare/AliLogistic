@@ -77,7 +77,7 @@ export default function StatusLog() {
                         <span className="text-xs text-slate-600">—</span>
                       )}
                       <ArrowRight size={12} className="text-slate-500 shrink-0" />
-                      <StatusBadge status={e.new_status} label={newCfg.label} pulse={newCfg.pulse} />
+                      <StatusBadge status={e.new_status} label={newCfg.label} />
                     </div>
                   </td>
                   <td className="px-4 py-3 text-slate-400 text-xs max-w-[200px] truncate">{e.note || '—'}</td>

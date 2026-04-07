@@ -10,7 +10,7 @@ export default function Sidebar() {
   const urgentOil = oilRecords.filter(o => oilStatus(o.remaining, o.change_interval, oilThresholds) === 'critical' || oilStatus(o.remaining, o.change_interval, oilThresholds) === 'warning').filter(o => !o.sent_for_change).length
   const urgentInsp = inspections.filter(i => i.days_remaining <= 30).length
   const activeDefects = defects.filter(d => d.status === 'active').length
-  const urgentStatuses = unitStatuses.filter(s => s.status === 'getting_late' || s.status === 'issue').length
+  const urgentStatuses = unitStatuses.filter(s => s.condition === 'getting_late' || s.condition === 'issue').length
 
   const nav = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },

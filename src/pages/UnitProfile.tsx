@@ -96,7 +96,7 @@ export default function UnitProfile() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <div className="bg-navy-800 rounded-xl border border-navy-700 p-4">
               <div className="text-xs text-slate-500 mb-1">Operational Status</div>
-              <StatusBadge status={opStatus} label={opCfg.label} pulse={opCfg.pulse} />
+              <StatusBadge status={opStatus} label={opCfg.label}  />
               {unitStatus?.load_number && <div className="text-xs font-mono text-slate-500 mt-1">{unitStatus.load_number}</div>}
             </div>
             <div className="bg-navy-800 rounded-xl border border-navy-700 p-4">
@@ -178,7 +178,7 @@ export default function UnitProfile() {
                 )}
               </div>
               <div className="flex items-center gap-4 mb-4">
-                <StatusBadge status={opStatus} label={cfg.label} pulse={cfg.pulse} />
+                <StatusBadge status={opStatus} label={cfg.label}  />
                 {unitStatus?.load_number && <span className="text-sm font-mono text-slate-400">{unitStatus.load_number}</span>}
               </div>
               {(unitStatus?.origin || unitStatus?.destination) && (

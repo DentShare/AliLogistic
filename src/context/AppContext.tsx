@@ -6,8 +6,8 @@ import {
   unitStatuses as initUnitStatuses, unitStatusLog as initUnitStatusLog,
   type Unit, type OilRecord, type Inspection, type Registration,
   type Repair, type Defect, type Driver, type Dispatcher, type AuditEntry,
-  type UnitStatus, type UnitStatusLogEntry, type UnitOperationalStatus,
-  OP_STATUS_CONFIG, defaultOilThresholds,
+  type UnitStatus, type UnitStatusLogEntry, type UnitOperationalStatus, type UnitCondition,
+  OP_STATUS_CONFIG, CONDITION_CONFIG, defaultOilThresholds,
 } from '../data/mock'
 
 interface ModalState {
@@ -87,6 +87,7 @@ interface AppContextType extends AppState {
   addRegistration: (data: { unit_id: string; state: string; plate_number: string; doc_number: string; reg_date: string }) => void
   // Unit Status actions
   updateUnitStatus: (unitId: string, newStatus: UnitOperationalStatus, fields: { note?: string; load_number?: string; origin?: string; destination?: string; eta?: string }) => void
+  setUnitCondition: (unitId: string, condition: UnitCondition, conditionNote: string) => void
   // Oil thresholds
   setOilThresholds: (t: { critical: number; warning: number; soon: number }) => void
   // Auth
@@ -414,7 +415,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (current) {
       setUnitStatuses(ss => ss.map(s => s.unit_id === unitId ? { ...s, status: newStatus, note, load_number, origin, destination, eta, updated_by: dispatcher, updated_at: now } : s))
     } else {
-      setUnitStatuses(ss => [...ss, { id: String(Date.now()), unit_id: unitId, status: newStatus, note, load_number, origin, destination, eta, updated_by: dispatcher, updated_at: now }])
+      setUnitStatuses(ss => [...ss, { id: String(Date.now()), unit_id: unitId, status: newStatus, condition: null, condition_note: '', note, load_number, origin, destination, eta, updated_by: dispatcher, updated_at: now, last_activity_at: now }])
     }
 
     setUnitStatusLog(log => [{
@@ -425,7 +426,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const prevLabel = prevStatus ? OP_STATUS_CONFIG[prevStatus].label : '—'
     const newLabel = OP_STATUS_CONFIG[newStatus].label
     setAuditLog(a => addAuditEntry(a, unit.unit_number, 'Updates', `Status changed`, 'status', prevLabel, newLabel))
-    addToast(`${unit.unit_number} → ${newLabel}`, newStatus === 'issue' ? 'bg-red-500' : newStatus === 'getting_late' ? 'bg-orange-500' : 'bg-emerald-500')
+    addToast(`${unit.unit_number} → ${newLabel}`, 'bg-emerald-500')
+  }, [unitStatuses, units, currentUser, addToast])
+
+  const setUnitCondition = useCallback((unitId: string, condition: UnitCondition, conditionNote: string) => {
+    const unit = units.find(u => u.id === unitId)
+    if (!unit) return
+    const current = unitStatuses.find(s => s.unit_id === unitId)
+    const now = new Date().toISOString()
+    const dispatcher = currentUser?.name || 'Admin'
+    const prevCondition = current?.condition || null
+    const prevLabel = prevCondition ? (CONDITION_CONFIG[prevCondition]?.label || '—') : '—'
+    const newLabel = condition ? (CONDITION_CONFIG[condition]?.label || '—') : 'Clear'
+
+    setUnitStatuses(ss => ss.map(s => s.unit_id === unitId ? { ...s, condition, condition_note: conditionNote, updated_by: dispatcher, updated_at: now, last_activity_at: now } : s))
+    setAuditLog(a => addAuditEntry(a, unit.unit_number, 'Updates', `Condition changed`, 'condition', prevLabel, newLabel))
+    addToast(`${unit.unit_number} condition → ${newLabel}`, condition === 'issue' ? 'bg-red-500' : condition === 'getting_late' ? 'bg-orange-500' : 'bg-emerald-500')
   }, [unitStatuses, units, currentUser, addToast])
 
   const toggleTheme = useCallback(() => setTheme(t => {
@@ -439,7 +455,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       isAuthenticated, currentUser,
       units, oilRecords, inspections, registrations, repairs, defects, drivers, dispatchers, auditLog, unitStatuses, unitStatusLog,
-      oilThresholds, setOilThresholds, updateUnitStatus,
+      oilThresholds, setOilThresholds, updateUnitStatus, setUnitCondition,
       theme, fullscreen, searchQuery, modal, toasts, login, logout,
       updateMileage, sendForChange, completeOilChange, updateOilType, updateOilInterval,
       resolveDefect, reopenDefect, renewRegistration, updateRegistration, uploadRegDocument,

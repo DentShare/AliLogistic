@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Truck, Moon, ArrowDownToLine, ArrowUpFromLine, Clock, CheckCircle, AlertTriangle, Package, ArrowRight } from 'lucide-react'
+import { Truck, Moon, ArrowDownToLine, ArrowUpFromLine, Package, ArrowRight } from 'lucide-react'
 import Modal from './Modal'
 import { useApp } from '../context/AppContext'
 import { OP_STATUS_CONFIG, type UnitOperationalStatus } from '../data/mock'
@@ -253,11 +253,10 @@ function AddRecordModal() {
 }
 
 const STATUS_ICONS: Record<UnitOperationalStatus, typeof Truck> = {
-  rolling: Truck, sleeping: Moon, at_shipper: ArrowDownToLine, at_receiver: ArrowUpFromLine,
-  getting_late: Clock, on_time: CheckCircle, issue: AlertTriangle, no_load: Package,
+  rolling: Truck, sleeping: Moon, at_shipper: ArrowDownToLine, at_receiver: ArrowUpFromLine, no_load: Package,
 }
 
-const ALL_STATUSES: UnitOperationalStatus[] = ['rolling', 'on_time', 'getting_late', 'issue', 'at_shipper', 'at_receiver', 'sleeping', 'no_load']
+const ALL_STATUSES: UnitOperationalStatus[] = ['rolling', 'at_shipper', 'at_receiver', 'sleeping', 'no_load']
 
 function UpdateStatusModal() {
   const { modal, closeModal, updateUnitStatus, units, unitStatuses } = useApp()
@@ -288,10 +287,9 @@ function UpdateStatusModal() {
   const currentOp = currentStatus?.status || 'no_load'
   const cfg = selected ? OP_STATUS_CONFIG[selected] : null
   const currentCfg = OP_STATUS_CONFIG[currentOp]
-  const needsNote = selected === 'getting_late' || selected === 'issue'
-  const showRoute = selected && ['rolling', 'getting_late', 'on_time'].includes(selected)
+  const showRoute = selected && selected === 'rolling'
   const showLoad = selected && selected !== 'no_load' && selected !== 'sleeping'
-  const canSubmit = selected && selected !== currentOp && (!needsNote || note.trim())
+  const canSubmit = selected && selected !== currentOp
 
   const handleConfirm = () => {
     if (!selected || !canSubmit) return
@@ -305,7 +303,7 @@ function UpdateStatusModal() {
         {/* Current status */}
         <div className="bg-navy-700 rounded-lg p-3 flex items-center gap-3">
           <span className="text-xs text-slate-500">Current:</span>
-          <StatusBadge status={currentOp} label={currentCfg.label} pulse={currentCfg.pulse} />
+          <StatusBadge status={currentOp} label={currentCfg.label} />
         </div>
 
         {/* Status pills */}
@@ -341,9 +339,9 @@ function UpdateStatusModal() {
         {/* Conditional fields */}
         {selected && (
           <div className="space-y-3">
-            <Field label={`Note${needsNote ? ' (required)' : ''}`}>
-              <textarea value={note} onChange={e => setNote(e.target.value)} placeholder={needsNote ? 'Describe the situation...' : 'Optional comment...'}
-                className={`w-full bg-navy-700 border rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent h-16 resize-none placeholder-slate-500 ${needsNote && !note.trim() ? 'border-orange-500/50' : 'border-navy-600'}`} />
+            <Field label="Note">
+              <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Optional comment..."
+                className="w-full bg-navy-700 border border-navy-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent h-16 resize-none placeholder-slate-500" />
             </Field>
             {showLoad && (
               <Field label="Load Number">
@@ -367,7 +365,7 @@ function UpdateStatusModal() {
 
         <div className="flex justify-end gap-2 pt-2">
           <Btn onClick={closeModal} color="bg-navy-600 hover:bg-navy-500">Cancel</Btn>
-          <Btn onClick={handleConfirm} color={canSubmit ? (cfg ? `${selected === 'issue' ? 'bg-red-600 hover:bg-red-500' : selected === 'getting_late' ? 'bg-orange-600 hover:bg-orange-500' : 'bg-accent hover:bg-accent-hover'}` : 'bg-accent hover:bg-accent-hover') : 'bg-navy-600 text-slate-500 cursor-not-allowed'}>
+          <Btn onClick={handleConfirm} color={canSubmit ? 'bg-accent hover:bg-accent-hover' : 'bg-navy-600 text-slate-500 cursor-not-allowed'}>
             Confirm
           </Btn>
         </div>
