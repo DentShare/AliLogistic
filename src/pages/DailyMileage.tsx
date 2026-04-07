@@ -15,7 +15,7 @@ export default function DailyMileage() {
   const isViewer = currentUser?.role === 'viewer'
   const sq = search.toLowerCase()
 
-  const activeUnits = units.filter(u => u.status === 'active')
+  const activeUnits = units
     .filter(u => {
       if (!sq) return true
       const drv = drivers.find(d => d.unit_id === u.id)
