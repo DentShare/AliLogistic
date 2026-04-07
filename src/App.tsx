@@ -18,6 +18,7 @@ import AuditLog from './pages/AuditLog'
 import Dispatchers from './pages/Dispatchers'
 import Updates from './pages/Updates'
 import StatusLog from './pages/StatusLog'
+import DailyMileage from './pages/DailyMileage'
 
 export default function App() {
   const { theme, fullscreen, isAuthenticated } = useApp()
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/updates" element={<Updates />} />
             <Route path="/updates/log" element={<StatusLog />} />
+            <Route path="/mileage" element={<DailyMileage />} />
             <Route path="/oil" element={<OilFluids />} />
             <Route path="/inspections" element={<Inspections />} />
             <Route path="/registrations" element={<Registrations />} />

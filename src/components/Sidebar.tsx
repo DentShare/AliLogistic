@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Radio, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle, Truck, Users, ClipboardList, Shield, LogOut } from 'lucide-react'
+import { LayoutDashboard, Radio, Gauge, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle, Truck, Users, ClipboardList, Shield, LogOut } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { oilStatus } from '../data/mock'
 
@@ -15,6 +15,7 @@ export default function Sidebar() {
   const nav = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/updates', icon: Radio, label: 'Updates', badge: urgentStatuses },
+    { to: '/mileage', icon: Gauge, label: 'Daily Mileage' },
     { to: '/oil', icon: Droplets, label: 'Oil & Fluids', badge: urgentOil },
     { to: '/inspections', icon: ShieldCheck, label: 'DOT Inspection', badge: urgentInsp },
     { to: '/registrations', icon: FileText, label: 'Registration' },

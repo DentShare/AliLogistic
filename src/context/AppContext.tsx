@@ -6,7 +6,8 @@ import {
   unitStatuses as initUnitStatuses, unitStatusLog as initUnitStatusLog,
   type Unit, type OilRecord, type Inspection, type Registration,
   type Repair, type Defect, type Driver, type Dispatcher, type AuditEntry,
-  type UnitStatus, type UnitStatusLogEntry, type UnitOperationalStatus, type UnitCondition,
+  type UnitStatus, type UnitStatusLogEntry, type UnitOperationalStatus, type UnitCondition, type DailyMileageEntry,
+  dailyMileage as initDailyMileage,
   OP_STATUS_CONFIG, CONDITION_CONFIG, defaultOilThresholds,
 } from '../data/mock'
 
@@ -41,6 +42,7 @@ interface AppState {
   auditLog: AuditEntry[]
   unitStatuses: UnitStatus[]
   unitStatusLog: UnitStatusLogEntry[]
+  dailyMileage: DailyMileageEntry[]
   oilThresholds: { critical: number; warning: number; soon: number }
   theme: 'dark' | 'light'
   fullscreen: boolean
@@ -88,6 +90,7 @@ interface AppContextType extends AppState {
   // Unit Status actions
   updateUnitStatus: (unitId: string, newStatus: UnitOperationalStatus, fields: { note?: string; load_number?: string; origin?: string; destination?: string; eta?: string }) => void
   setUnitCondition: (unitId: string, condition: UnitCondition, conditionNote: string) => void
+  addDailyMileage: (unitId: string, mileage: number) => void
   // Oil thresholds
   setOilThresholds: (t: { critical: number; warning: number; soon: number }) => void
   // Auth
@@ -163,6 +166,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [auditLog, setAuditLog] = useState<AuditEntry[]>(structuredClone(initAudit))
   const [unitStatuses, setUnitStatuses] = useState<UnitStatus[]>(structuredClone(initUnitStatuses))
   const [unitStatusLog, setUnitStatusLog] = useState<UnitStatusLogEntry[]>(structuredClone(initUnitStatusLog))
+  const [dailyMileage, setDailyMileage] = useState<DailyMileageEntry[]>(structuredClone(initDailyMileage))
   const [oilThresholds, setOilThresholds] = useState(defaultOilThresholds)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [fullscreen, setFullscreen] = useState(false)
@@ -429,6 +433,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addToast(`${unit.unit_number} → ${newLabel}`, 'bg-emerald-500')
   }, [unitStatuses, units, currentUser, addToast])
 
+  const addDailyMileage = useCallback((unitId: string, mileage: number) => {
+    const unit = units.find(u => u.id === unitId)
+    if (!unit) return
+    const today = new Date().toISOString().slice(0, 10)
+    const dispatcher = currentUser?.name || 'Admin'
+    const oldMileage = unit.mileage
+    // Update unit mileage
+    setUnits(us => us.map(u => u.id === unitId ? { ...u, mileage } : u))
+    // Update oil remaining
+    setOilRecords(ors => ors.map(o => o.unit_id === unitId ? { ...o, remaining: o.next_change - mileage } : o))
+    // Add mileage entry
+    setDailyMileage(dm => [{ id: String(Date.now()), unit_id: unitId, date: today, mileage, entered_by: dispatcher }, ...dm])
+    setAuditLog(a => addAuditEntry(a, unit.unit_number, 'Mileage', 'Daily mileage update', 'mileage', oldMileage.toLocaleString(), mileage.toLocaleString()))
+    addToast(`${unit.unit_number} mileage → ${mileage.toLocaleString()} mi`, 'bg-emerald-500')
+  }, [units, currentUser, addToast])
+
   const setUnitCondition = useCallback((unitId: string, condition: UnitCondition, conditionNote: string) => {
     const unit = units.find(u => u.id === unitId)
     if (!unit) return
@@ -455,7 +475,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       isAuthenticated, currentUser,
       units, oilRecords, inspections, registrations, repairs, defects, drivers, dispatchers, auditLog, unitStatuses, unitStatusLog,
-      oilThresholds, setOilThresholds, updateUnitStatus, setUnitCondition,
+      oilThresholds, setOilThresholds, updateUnitStatus, setUnitCondition, addDailyMileage, dailyMileage,
       theme, fullscreen, searchQuery, modal, toasts, login, logout,
       updateMileage, sendForChange, completeOilChange, updateOilType, updateOilInterval,
       resolveDefect, reopenDefect, renewRegistration, updateRegistration, uploadRegDocument,
