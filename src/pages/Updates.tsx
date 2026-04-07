@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Truck, Moon, ArrowDownToLine, ArrowUpFromLine, Clock, CheckCircle, AlertTriangle, Package, LayoutGrid, List, History, Minimize } from 'lucide-react'
-import KpiCard from '../components/KpiCard'
+import { Truck, Moon, ArrowDownToLine, ArrowUpFromLine, Clock, CheckCircle, AlertTriangle, Package, LayoutGrid, List, History, Minimize, Search } from 'lucide-react'
 import StatusBadge from '../components/StatusBadge'
 import { useApp } from '../context/AppContext'
 import { OP_STATUS_CONFIG, type UnitOperationalStatus } from '../data/mock'
@@ -42,6 +41,8 @@ function getColumnForStatus(status: UnitOperationalStatus): UnitOperationalStatu
 export default function Updates() {
   const { units, unitStatuses, drivers, searchQuery, openModal, currentUser, fullscreen, toggleFullscreen } = useApp()
   const [view, setView] = useState<'board' | 'table'>('board')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [localSearch, setLocalSearch] = useState('')
 
   const isViewer = currentUser?.role === 'viewer'
 
@@ -56,18 +57,14 @@ export default function Updates() {
     const st = unitStatuses.find(s => s.unit_id === u.id)
     const driver = drivers.find(d => d.unit_id === u.id)
     return { unit: u, status: st, driverName: driver?.name || u.driver, opStatus: (st?.status || 'no_load') as UnitOperationalStatus }
-  }).filter(e =>
-    !searchQuery || e.unit.unit_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (e.status?.load_number || '').toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  }).filter(e => {
+    const sq = (searchQuery || localSearch).toLowerCase()
+    if (sq && !e.unit.unit_number.toLowerCase().includes(sq) && !e.driverName.toLowerCase().includes(sq) && !(e.status?.load_number || '').toLowerCase().includes(sq)) return false
+    if (filterStatus && e.opStatus !== filterStatus) return false
+    return true
+  })
 
-  // Count all 8 statuses for KPIs
   const allStatuses: UnitOperationalStatus[] = ['rolling', 'on_time', 'getting_late', 'issue', 'at_shipper', 'at_receiver', 'sleeping', 'no_load']
-  const counts = allStatuses.reduce((acc, s) => {
-    acc[s] = enriched.filter(e => e.opStatus === s).length
-    return acc
-  }, {} as Record<UnitOperationalStatus, number>)
 
   return (
     <div className={`flex flex-col ${fullscreen ? 'h-screen p-4 gap-4' : 'h-[calc(100vh-56px-48px)] gap-6'}`}>
@@ -76,20 +73,8 @@ export default function Updates() {
           <Minimize size={16} />
         </button>
       )}
-      {/* KPI Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 shrink-0">
-        <KpiCard title="Rolling" value={counts.rolling + counts.on_time + counts.getting_late + counts.issue} icon={Truck} color="text-emerald-400" />
-        <KpiCard title="On Time" value={counts.on_time} icon={CheckCircle} color="text-green-400" />
-        <KpiCard title="Getting Late" value={counts.getting_late} icon={Clock} color="text-orange-400" />
-        <KpiCard title="Issues" value={counts.issue} icon={AlertTriangle} color="text-red-400" />
-        <KpiCard title="At Shipper" value={counts.at_shipper} icon={ArrowDownToLine} color="text-purple-400" />
-        <KpiCard title="At Receiver" value={counts.at_receiver} icon={ArrowUpFromLine} color="text-indigo-400" />
-        <KpiCard title="Sleeping" value={counts.sleeping} icon={Moon} color="text-blue-400" />
-        <KpiCard title="No Load" value={counts.no_load} icon={Package} color="text-slate-400" />
-      </div>
-
-      {/* Controls */}
-      <div className="flex items-center justify-between shrink-0">
+      {/* Controls: view toggle + filter + search + status log */}
+      <div className="flex items-center gap-3 shrink-0 flex-wrap">
         <div className="flex gap-1 bg-navy-800 rounded-lg p-1 border border-navy-700">
           <button onClick={() => setView('board')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${view === 'board' ? 'bg-accent text-white' : 'text-slate-400 hover:text-white'}`}>
             <LayoutGrid size={14} /> Board
@@ -98,7 +83,17 @@ export default function Updates() {
             <List size={14} /> Table
           </button>
         </div>
-        <Link to="/updates/log" className="flex items-center gap-1.5 px-3 py-1.5 bg-navy-800 border border-navy-700 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-colors">
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          className="bg-navy-800 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-accent">
+          <option value="">All statuses</option>
+          {allStatuses.map(s => <option key={s} value={s}>{OP_STATUS_CONFIG[s].label}</option>)}
+        </select>
+        <div className="flex items-center bg-navy-800 border border-navy-700 rounded-lg px-2.5 py-1.5 gap-1.5">
+          <Search size={13} className="text-slate-500" />
+          <input value={localSearch} onChange={e => setLocalSearch(e.target.value)} placeholder="Search units..."
+            className="bg-transparent text-xs text-white placeholder-slate-500 outline-none w-32" />
+        </div>
+        <Link to="/updates/log" className="flex items-center gap-1.5 px-3 py-1.5 bg-navy-800 border border-navy-700 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-colors ml-auto">
           <History size={14} /> Status Log
         </Link>
       </div>
