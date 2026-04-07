@@ -63,19 +63,19 @@ export default function Dashboard() {
       <div className="flex gap-4 overflow-x-auto pb-2 items-start flex-1 min-h-0">
         <Column title="Oil Change Needed" color="bg-red-500/20 text-red-400" count={oilUrgent.length}>
           {oilUrgent.map(o => { const u = getUnit(o.unit_id); return u ? (
-            <TruckCard key={o.id} unit={u} pulse detail={
+            <TruckCard key={o.id} unit={u} pulse columnTitle="Oil Change Needed" detail={
               <div className="flex items-center justify-between">
-                <span className="text-xs text-orange-400">{o.oil_type}</span>
-                <span className="text-xs font-mono text-red-400">{o.remaining.toLocaleString()} mi left</span>
+                <span className="text-[10px] text-orange-400">{o.oil_type}</span>
+                <span className="text-[10px] font-mono text-red-400">{o.remaining.toLocaleString()} mi</span>
               </div>
             } />
           ) : null })}
         </Column>
         <Column title="Sent for Change" color="bg-blue-500/20 text-blue-400" count={sentForChange.length}>
           {sentForChange.map(o => { const u = getUnit(o.unit_id); return u ? (
-            <TruckCard key={o.id} unit={u} detail={
+            <TruckCard key={o.id} unit={u} columnTitle="Sent for Change" detail={
               <div className="flex items-center justify-between">
-                <span className="text-xs text-blue-400">{o.oil_type}</span>
+                <span className="text-[10px] text-blue-400">{o.oil_type}</span>
                 <StatusBadge status="sent" label="Sent" />
               </div>
             } />
@@ -83,11 +83,11 @@ export default function Dashboard() {
         </Column>
         <Column title="Inspection Due" color="bg-yellow-500/20 text-yellow-400" count={inspDue.length}>
           {inspDue.map(i => { const u = getUnit(i.unit_id); return u ? (
-            <TruckCard key={i.id} unit={u} pulse={i.days_remaining < 0} detail={
+            <TruckCard key={i.id} unit={u} pulse={i.days_remaining < 0} columnTitle="Inspection Due" detail={
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">{i.doc_number}</span>
-                <span className={`text-xs font-mono ${i.days_remaining < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
-                  {i.days_remaining < 0 ? `${Math.abs(i.days_remaining)}d expired` : `${i.days_remaining}d left`}
+                <span className="text-[10px] text-slate-400">{i.doc_number}</span>
+                <span className={`text-[10px] font-mono ${i.days_remaining < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
+                  {i.days_remaining < 0 ? `${Math.abs(i.days_remaining)}d exp` : `${i.days_remaining}d left`}
                 </span>
               </div>
             } />
@@ -95,9 +95,9 @@ export default function Dashboard() {
         </Column>
         <Column title="Active Defects" color="bg-red-500/20 text-red-400" count={activeDefects.length}>
           {activeDefects.map(d => { const u = getUnit(d.unit_id); return u ? (
-            <TruckCard key={d.id} unit={u} pulse={d.severity === 'critical'} detail={
+            <TruckCard key={d.id} unit={u} pulse={d.severity === 'critical'} columnTitle="Active Defects" detail={
               <div>
-                <p className="text-xs text-slate-400 line-clamp-2 mb-1">{d.description}</p>
+                <p className="text-[10px] text-slate-400 line-clamp-1">{d.description}</p>
                 <StatusBadge status={d.severity} pulse={d.severity === 'critical'} />
               </div>
             } />
@@ -105,12 +105,12 @@ export default function Dashboard() {
         </Column>
         <Column title="Repairs" color="bg-orange-500/20 text-orange-400" count={activeRepairs.length}>
           {activeRepairs.map(r => { const u = getUnit(r.unit_id); return u ? (
-            <TruckCard key={r.id} unit={u} detail={
+            <TruckCard key={r.id} unit={u} columnTitle="Repairs" detail={
               <div>
-                <p className="text-xs text-slate-400 mb-1">{r.service}</p>
+                <p className="text-[10px] text-slate-400 line-clamp-1">{r.service}</p>
                 <div className="flex items-center justify-between">
                   <StatusBadge status={r.status === 'needs_repair' ? 'critical' : r.status === 'sent' ? 'sent' : 'warning'} label={r.status === 'needs_repair' ? 'Needs Repair' : r.status === 'sent' ? 'Sent' : 'In Repair'} />
-                  <span className="text-xs font-mono text-slate-500">${r.cost.toLocaleString()}</span>
+                  <span className="text-[10px] font-mono text-slate-500">${r.cost.toLocaleString()}</span>
                 </div>
               </div>
             } />
@@ -118,7 +118,7 @@ export default function Dashboard() {
         </Column>
         <Column title="All Clear" color="bg-emerald-500/20 text-emerald-400" count={clearUnits.length}>
           {clearUnits.map(u => (
-            <TruckCard key={u.id} unit={u} detail={<StatusBadge status="good" label="All Clear" />} />
+            <TruckCard key={u.id} unit={u} columnTitle="All Clear" detail={<StatusBadge status="good" label="All Clear" />} />
           ))}
         </Column>
       </div>
@@ -128,27 +128,35 @@ export default function Dashboard() {
 
 function Column({ title, color, count, children }: { title: string; color: string; count: number; children: React.ReactNode }) {
   return (
-    <div className="bg-navy-800 rounded-xl border border-navy-700 min-w-[260px] flex flex-col max-h-full shrink-0">
-      <div className="p-3 border-b border-navy-700 flex items-center justify-between shrink-0">
-        <span className="text-sm font-semibold text-slate-300">{title}</span>
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>{count}</span>
+    <div className="bg-navy-800 rounded-xl border border-navy-700 min-w-[220px] flex flex-col max-h-full shrink-0">
+      <div className="px-2.5 py-2 border-b border-navy-700 flex items-center justify-between shrink-0">
+        <span className="text-xs font-semibold text-slate-300">{title}</span>
+        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{count}</span>
       </div>
-      <div className="p-3 space-y-2 overflow-y-auto flex-1 min-h-0">{children}</div>
+      <div className="p-2 space-y-1.5 overflow-y-auto flex-1 min-h-0">{children}</div>
     </div>
   )
 }
 
-function TruckCard({ unit, detail, pulse }: { unit: { id: string; unit_number: string; driver: string; vin: string; mileage: number }; detail: React.ReactNode; pulse?: boolean }) {
+const columnColors: Record<string, string> = {
+  'Oil Change Needed': 'border-l-red-500 shadow-red-500/10',
+  'Sent for Change': 'border-l-blue-500 shadow-blue-500/10',
+  'Inspection Due': 'border-l-yellow-500 shadow-yellow-500/10',
+  'Active Defects': 'border-l-red-500 shadow-red-500/10',
+  'Repairs': 'border-l-orange-500 shadow-orange-500/10',
+  'All Clear': 'border-l-emerald-500 shadow-emerald-500/10',
+}
+
+function TruckCard({ unit, detail, pulse, columnTitle }: { unit: { id: string; unit_number: string; driver: string; mileage: number }; detail: React.ReactNode; pulse?: boolean; columnTitle?: string }) {
+  const glow = columnTitle ? columnColors[columnTitle] || '' : ''
   return (
-    <Link to={`/units/${unit.id}`} className="block bg-navy-900 rounded-lg p-3 border border-navy-700 hover:border-accent/40 transition-colors">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm font-bold text-white">{unit.unit_number}</span>
-        {pulse && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-slow" />}
+    <Link to={`/units/${unit.id}`} className={`block bg-navy-900 rounded-lg px-2.5 py-2 border border-l-2 border-navy-700 hover:border-accent/40 transition-colors shadow-sm ${glow} ${pulse ? 'animate-pulse-slow shadow-md' : ''}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-white">{unit.unit_number}</span>
+        {pulse && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
       </div>
-      <div className="text-xs text-slate-500 mb-1">{unit.driver}</div>
-      <div className="text-xs font-mono text-slate-600 mb-2">{unit.vin}</div>
-      <div className="text-xs font-mono text-slate-400">{unit.mileage.toLocaleString()} mi</div>
-      <div className="mt-2">{detail}</div>
+      <div className="text-[10px] text-slate-500">{unit.driver} · {unit.mileage.toLocaleString()} mi</div>
+      <div className="mt-1">{detail}</div>
     </Link>
   )
 }

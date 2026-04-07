@@ -88,41 +88,40 @@ export default function Updates() {
 
       {/* Kanban View */}
       {view === 'kanban' && (
-        <div className="flex gap-4 overflow-x-auto pb-2 items-start flex-1 min-h-0">
+        <div className="flex gap-3 overflow-x-auto pb-2 items-start flex-1 min-h-0">
           {STATUS_ORDER.map(status => {
             const cfg = OP_STATUS_CONFIG[status]
             const Icon = STATUS_ICONS[status]
             const items = enriched.filter(e => e.opStatus === status)
             return (
-              <div key={status} className="bg-navy-800 rounded-xl border border-navy-700 min-w-[270px] flex flex-col max-h-full shrink-0">
-                <div className="p-3 border-b border-navy-700 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Icon size={16} className={cfg.textColor} />
-                    <span className="text-sm font-semibold text-slate-300">{cfg.label}</span>
+              <div key={status} className="bg-navy-800 rounded-xl border border-navy-700 min-w-[220px] flex flex-col max-h-full shrink-0">
+                <div className="px-2.5 py-2 border-b border-navy-700 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <Icon size={14} className={cfg.textColor} />
+                    <span className="text-xs font-semibold text-slate-300">{cfg.label}</span>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor}`}>{items.length}</span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor}`}>{items.length}</span>
                 </div>
-                <div className="p-3 space-y-2 overflow-y-auto flex-1 min-h-0">
+                <div className="p-2 space-y-1.5 overflow-y-auto flex-1 min-h-0">
                   {items.map(({ unit, status: st, driverName }) => (
-                    <div key={unit.id} className={`bg-navy-900 rounded-lg p-3 border border-navy-700 hover:border-navy-600 transition-colors ${cfg.pulse ? 'animate-pulse-slow' : ''}`}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <Link to={`/units/${unit.id}`} className="text-sm font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
-                        {cfg.pulse && <span className={`w-2 h-2 rounded-full animate-pulse`} style={{ backgroundColor: cfg.color }} />}
+                    <div key={unit.id} className={`bg-navy-900 rounded-lg px-2.5 py-2 border border-l-2 border-navy-700 hover:border-navy-600 transition-colors shadow-sm ${cfg.pulse ? 'animate-pulse-slow shadow-md' : ''}`} style={{ borderLeftColor: cfg.color, boxShadow: cfg.pulse ? `0 0 8px ${cfg.color}33` : `0 0 4px ${cfg.color}15` }}>
+                      <div className="flex items-center justify-between">
+                        <Link to={`/units/${unit.id}`} className="text-xs font-bold text-white hover:text-accent transition-colors">{unit.unit_number}</Link>
+                        {cfg.pulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: cfg.color }} />}
                       </div>
-                      <div className="text-xs text-slate-500 mb-1">{driverName}</div>
-                      {st?.load_number && <div className="text-xs font-mono text-slate-400 mb-1">{st.load_number}</div>}
+                      <div className="text-[10px] text-slate-500">{driverName}{st?.load_number ? ` · ${st.load_number}` : ''}</div>
                       {(st?.origin || st?.destination) && (
-                        <div className="text-xs text-slate-500 mb-1 truncate">{st?.origin} → {st?.destination}</div>
+                        <div className="text-[10px] text-slate-500 truncate">{st?.origin} → {st?.destination}</div>
                       )}
                       {st?.eta && (
-                        <div className="text-xs text-slate-500 mb-1">ETA: {new Date(st.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                        <div className="text-[10px] text-slate-600">ETA: {new Date(st.eta).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                       )}
-                      {st?.note && <div className="text-xs text-slate-600 italic mb-1 line-clamp-2">{st.note}</div>}
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-[10px] text-slate-600">{timeAgo(st?.updated_at || '')}</span>
+                      {st?.note && <div className="text-[10px] text-slate-600 italic line-clamp-1">{st.note}</div>}
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[9px] text-slate-600">{timeAgo(st?.updated_at || '')}</span>
                         {!isViewer && (
                           <button onClick={() => openModal('update-status', { unitId: unit.id })}
-                            className="text-[10px] font-medium text-accent hover:text-accent-hover transition-colors">
+                            className="text-[9px] font-medium text-accent hover:text-accent-hover transition-colors">
                             Update
                           </button>
                         )}
