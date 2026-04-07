@@ -31,58 +31,85 @@ body {
 
 /* Light theme overrides */
 [data-theme="light"] {
-  --color-navy-950: #f1f5f9;
-  --color-navy-900: #f8fafc;
+  --color-navy-950: #f0f4f8;
+  --color-navy-900: #f7f9fc;
   --color-navy-800: #ffffff;
-  --color-navy-700: #e2e8f0;
-  --color-navy-600: #cbd5e1;
-  --color-navy-500: #94a3b8;
+  --color-navy-700: #d1d9e6;
+  --color-navy-600: #b0bdd0;
+  --color-navy-500: #8494a7;
 }
 [data-theme="light"] body,
 [data-theme="light"] {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: #f0f4f8;
+  color: #1a202c;
 }
-/* Light theme text contrast */
+/* Light theme text — much darker for readability */
 [data-theme="light"] .text-white { color: #0f172a; }
-[data-theme="light"] .text-slate-200 { color: #334155; }
-[data-theme="light"] .text-slate-300 { color: #475569; }
-[data-theme="light"] .text-slate-400 { color: #64748b; }
-[data-theme="light"] .text-slate-500 { color: #94a3b8; }
-[data-theme="light"] .text-slate-600 { color: #94a3b8; }
+[data-theme="light"] .text-slate-200 { color: #1e293b; }
+[data-theme="light"] .text-slate-300 { color: #334155; }
+[data-theme="light"] .text-slate-400 { color: #475569; }
+[data-theme="light"] .text-slate-500 { color: #64748b; }
+[data-theme="light"] .text-slate-600 { color: #64748b; }
 
 /* Keep button/badge text white in light mode */
 [data-theme="light"] .bg-accent .text-white,
 [data-theme="light"] .bg-accent.text-white,
 [data-theme="light"] .bg-emerald-600 .text-white,
 [data-theme="light"] .bg-emerald-600.text-white,
-[data-theme="light"] button.bg-accent,
-[data-theme="light"] [class*="bg-red-500/20"] .text-red-400,
-[data-theme="light"] [class*="bg-emerald-500/20"] .text-emerald-400 {
-  color: inherit;
+[data-theme="light"] button.bg-accent {
+  color: white !important;
 }
+
+/* Colored text stays saturated in light mode */
+[data-theme="light"] .text-red-400 { color: #dc2626; }
+[data-theme="light"] .text-orange-400 { color: #ea580c; }
+[data-theme="light"] .text-yellow-400 { color: #ca8a04; }
+[data-theme="light"] .text-emerald-400 { color: #059669; }
+[data-theme="light"] .text-green-400 { color: #16a34a; }
+[data-theme="light"] .text-blue-400 { color: #2563eb; }
+[data-theme="light"] .text-purple-400 { color: #7c3aed; }
+[data-theme="light"] .text-indigo-400 { color: #4f46e5; }
+[data-theme="light"] .text-accent { color: #1d4ed8; }
 
 /* Light theme specific overrides for interactive elements */
 [data-theme="light"] input,
 [data-theme="light"] select,
 [data-theme="light"] textarea {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: #f0f4f8;
+  border-color: #b0bdd0;
+  color: #1a202c;
 }
 [data-theme="light"] input::placeholder,
 [data-theme="light"] textarea::placeholder {
-  color: #94a3b8;
+  color: #8494a7;
+}
+
+/* Sidebar in light mode */
+[data-theme="light"] aside {
+  background: #ffffff;
+  border-color: #d1d9e6;
+}
+
+/* Header in light mode */
+[data-theme="light"] header {
+  background: #ffffff;
+  border-color: #d1d9e6;
 }
 
 /* Shadows for light theme cards */
 [data-theme="light"] .bg-navy-800 {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.1);
 }
 
-/* Stronger card glow in light theme for visibility on bright backgrounds */
+/* Stronger card glow + borders in light theme */
 [data-theme="light"] [style*="box-shadow"] {
-  filter: saturate(1.4) brightness(1.1);
+  filter: saturate(1.6) contrast(1.05);
+}
+
+/* KPI cards text stays bold in light */
+[data-theme="light"] .font-mono.text-2xl,
+[data-theme="light"] .text-2xl.font-bold {
+  filter: saturate(1.5);
 }
 
 @keyframes pulse-slow {
