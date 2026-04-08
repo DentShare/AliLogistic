@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import {
   units as initUnits, oilRecords as initOil, inspections as initInsp,
   registrations as initReg, repairs as initRepairs, defects as initDefects,
@@ -170,6 +170,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [oilThresholds, setOilThresholds] = useState(defaultOilThresholds)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [fullscreen, setFullscreen] = useState(false)
+
+  // Cross-tab sync via BroadcastChannel
+  const channelRef = useRef<BroadcastChannel | null>(null)
+  const ignoreNextBroadcast = useRef(false)
+
+  useEffect(() => {
+    const ch = new BroadcastChannel('alilogistic-sync')
+    channelRef.current = ch
+    ch.onmessage = (e) => {
+      if (ignoreNextBroadcast.current) { ignoreNextBroadcast.current = false; return }
+      const d = e.data
+      if (d.units) setUnits(d.units)
+      if (d.oilRecords) setOilRecords(d.oilRecords)
+      if (d.inspections) setInspections(d.inspections)
+      if (d.registrations) setRegistrations(d.registrations)
+      if (d.repairs) setRepairs(d.repairs)
+      if (d.defects) setDefects(d.defects)
+      if (d.drivers) setDrivers(d.drivers)
+      if (d.unitStatuses) setUnitStatuses(d.unitStatuses)
+      if (d.unitStatusLog) setUnitStatusLog(d.unitStatusLog)
+      if (d.dailyMileage) setDailyMileage(d.dailyMileage)
+      if (d.auditLog) setAuditLog(d.auditLog)
+    }
+    return () => ch.close()
+  }, [])
+
+  const broadcastState = useCallback(() => {
+    channelRef.current?.postMessage({
+      units, oilRecords, inspections, registrations, repairs, defects,
+      drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog,
+    })
+  }, [units, oilRecords, inspections, registrations, repairs, defects, drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog])
+
+  // Broadcast on any data change
+  const prevBroadcast = useRef('')
+  useEffect(() => {
+    const key = JSON.stringify({ u: units.length, o: oilRecords.length, r: repairs.length, d: defects.length, s: unitStatuses.map(s => s.updated_at).join(''), m: dailyMileage.length })
+    if (prevBroadcast.current && prevBroadcast.current !== key) {
+      broadcastState()
+    }
+    prevBroadcast.current = key
+  }, [units, oilRecords, inspections, registrations, repairs, defects, drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog, broadcastState])
   const [searchQuery, setSearchQuery] = useState('')
   const [modal, setModal] = useState<ModalState>({ type: null })
   const [toasts, setToasts] = useState<Toast[]>([])
