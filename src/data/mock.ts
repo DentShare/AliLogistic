@@ -52,6 +52,7 @@ export interface Repair {
   service: string;
   category: string;
   shop: string;
+  shop_type: 'local' | 'our';
   cost: number;
   status: 'needs_repair' | 'sent' | 'in_repair' | 'working';
 }
@@ -651,18 +652,18 @@ export const registrations: Registration[] = [
 ];
 
 export const repairs: Repair[] = [
-  { id: '1', unit_id: '1', date: '2026-03-15', invoice: 'INV-2401', service: 'Brake Pad Replacement', category: 'Brakes', shop: 'FleetPro Service', cost: 1850, status: 'working' },
-  { id: '2', unit_id: '1', date: '2026-02-20', invoice: 'INV-2398', service: 'Oil Leak Repair', category: 'Engine', shop: 'TruckCare Center', cost: 2400, status: 'working' },
-  { id: '3', unit_id: '2', date: '2026-03-10', invoice: 'INV-2399', service: 'Tire Rotation & Balance', category: 'Tires', shop: 'TireMax', cost: 680, status: 'in_repair' },
-  { id: '4', unit_id: '3', date: '2026-03-22', invoice: 'INV-2402', service: 'Suspension Overhaul', category: 'Suspension', shop: 'Heavy Duty Repair', cost: 4500, status: 'in_repair' },
-  { id: '5', unit_id: '3', date: '2026-01-15', invoice: 'INV-2390', service: 'Electrical Wiring Repair', category: 'Electrical', shop: 'AutoElectric Pro', cost: 1200, status: 'working' },
-  { id: '6', unit_id: '4', date: '2026-03-05', invoice: 'INV-2397', service: 'AC Compressor Replace', category: 'HVAC', shop: 'CoolAir Trucks', cost: 3200, status: 'sent' },
-  { id: '7', unit_id: '5', date: '2026-02-28', invoice: 'INV-2396', service: 'Transmission Service', category: 'Transmission', shop: 'GearBox Specialists', cost: 5600, status: 'needs_repair' },
-  { id: '8', unit_id: '6', date: '2026-03-18', invoice: 'INV-2400', service: 'Front Brake Drums', category: 'Brakes', shop: 'FleetPro Service', cost: 2100, status: 'sent' },
-  { id: '9', unit_id: '8', date: '2026-03-01', invoice: 'INV-2395', service: 'DPF Cleaning', category: 'Engine', shop: 'TruckCare Center', cost: 900, status: 'working' },
-  { id: '10', unit_id: '9', date: '2026-02-10', invoice: 'INV-2393', service: 'Leaf Spring Replace', category: 'Suspension', shop: 'Heavy Duty Repair', cost: 3800, status: 'needs_repair' },
-  { id: '11', unit_id: '10', date: '2026-03-25', invoice: 'INV-2403', service: 'Alternator Replacement', category: 'Electrical', shop: 'AutoElectric Pro', cost: 1450, status: 'in_repair' },
-  { id: '12', unit_id: '2', date: '2026-01-20', invoice: 'INV-2391', service: 'Coolant Flush', category: 'Engine', shop: 'TruckCare Center', cost: 350, status: 'working' },
+  { id: '1', unit_id: '1', date: '2026-03-15', invoice: 'INV-2401', service: 'Brake Pad Replacement', category: 'Brakes', shop: 'FleetPro Service', shop_type: 'our', cost: 1850, status: 'working' },
+  { id: '2', unit_id: '1', date: '2026-02-20', invoice: 'INV-2398', service: 'Oil Leak Repair', category: 'Engine', shop: 'TruckCare Center', shop_type: 'our', cost: 2400, status: 'working' },
+  { id: '3', unit_id: '2', date: '2026-03-10', invoice: 'INV-2399', service: 'Tire Rotation & Balance', category: 'Tires', shop: 'TireMax', shop_type: 'our', cost: 680, status: 'in_repair' },
+  { id: '4', unit_id: '3', date: '2026-03-22', invoice: 'INV-2402', service: 'Suspension Overhaul', category: 'Suspension', shop: 'Heavy Duty Repair', shop_type: 'our', cost: 4500, status: 'in_repair' },
+  { id: '5', unit_id: '3', date: '2026-01-15', invoice: 'INV-2390', service: 'Electrical Wiring Repair', category: 'Electrical', shop: 'AutoElectric Pro', shop_type: 'local', cost: 1200, status: 'working' },
+  { id: '6', unit_id: '4', date: '2026-03-05', invoice: 'INV-2397', service: 'AC Compressor Replace', category: 'HVAC', shop: 'CoolAir Trucks', shop_type: 'local', cost: 3200, status: 'sent' },
+  { id: '7', unit_id: '5', date: '2026-02-28', invoice: 'INV-2396', service: 'Transmission Service', category: 'Transmission', shop: 'GearBox Specialists', shop_type: 'local', cost: 5600, status: 'needs_repair' },
+  { id: '8', unit_id: '6', date: '2026-03-18', invoice: 'INV-2400', service: 'Front Brake Drums', category: 'Brakes', shop: 'FleetPro Service', shop_type: 'local', cost: 2100, status: 'sent' },
+  { id: '9', unit_id: '8', date: '2026-03-01', invoice: 'INV-2395', service: 'DPF Cleaning', category: 'Engine', shop: 'TruckCare Center', shop_type: 'local', cost: 900, status: 'working' },
+  { id: '10', unit_id: '9', date: '2026-02-10', invoice: 'INV-2393', service: 'Leaf Spring Replace', category: 'Suspension', shop: 'Heavy Duty Repair', shop_type: 'local', cost: 3800, status: 'needs_repair' },
+  { id: '11', unit_id: '10', date: '2026-03-25', invoice: 'INV-2403', service: 'Alternator Replacement', category: 'Electrical', shop: 'AutoElectric Pro', shop_type: 'local', cost: 1450, status: 'in_repair' },
+  { id: '12', unit_id: '2', date: '2026-01-20', invoice: 'INV-2391', service: 'Coolant Flush', category: 'Engine', shop: 'TruckCare Center', shop_type: 'local', cost: 350, status: 'working' },
 ];
 
 export const defects: Defect[] = [

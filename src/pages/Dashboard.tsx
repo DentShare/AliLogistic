@@ -151,8 +151,8 @@ export default function Dashboard() {
       title: 'In Repair',
       color: 'bg-orange-500/20 text-orange-400',
       count: inRepair.length,
-      children: inRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
-        <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} extra={r.status === 'sent' ? 'Sent' : 'In Repair'} variant={variant} changedUnits={changedUnits} />
+      children: inRepair.map(r => { const u = getUnit(r.unit_id); const shopTag = r.shop_type === 'our' ? 'OUR' : 'LOCAL'; return u ? (
+        <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} extra={`${shopTag} · ${r.status === 'sent' ? 'Sent' : 'In Repair'}`} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -160,8 +160,8 @@ export default function Dashboard() {
       title: 'Needs Repair',
       color: 'bg-red-500/20 text-red-400',
       count: needsRepair.length,
-      children: needsRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
-        <TruckCard key={r.id} unit={u} severity="needs_repair" extra="Needs Repair" variant={variant} changedUnits={changedUnits} />
+      children: needsRepair.map(r => { const u = getUnit(r.unit_id); const shopTag = r.shop_type === 'our' ? 'OUR' : 'LOCAL'; return u ? (
+        <TruckCard key={r.id} unit={u} severity="needs_repair" extra={`${shopTag} · Needs Repair`} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {

@@ -83,7 +83,7 @@ interface AppContextType extends AppState {
   createUnit: (data: { unit_number: string; vin: string; driver: string; make: string; model: string; year: number }) => void
   // Add records
   addOilRecord: (data: { unit_id: string; oil_type: string; change_interval: number; last_changed: number }) => void
-  addRepair: (data: { unit_id: string; service: string; cost: number; category: string; shop: string }) => void
+  addRepair: (data: { unit_id: string; service: string; cost: number; category: string; shop: string; shop_type: 'local' | 'our' }) => void
   addDefect: (data: { unit_id: string; description: string; severity: Defect['severity'] }) => void
   addInspection: (data: { unit_id: string; doc_number: string; inspection_date: string }) => void
   addRegistration: (data: { unit_id: string; state: string; plate_number: string; doc_number: string; reg_date: string }) => void
@@ -364,7 +364,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addToast(`Oil record added for ${unit?.unit_number || '?'}`)
   }, [units, addToast])
 
-  const addRepair = useCallback((data: { unit_id: string; service: string; cost: number; category: string; shop: string }) => {
+  const addRepair = useCallback((data: { unit_id: string; service: string; cost: number; category: string; shop: string; shop_type: 'local' | 'our' }) => {
     const unit = units.find(u => u.id === data.unit_id)
     const rec: Repair = { id: String(Date.now()), ...data, date: new Date().toISOString().slice(0, 10), invoice: `INV-${Date.now().toString().slice(-4)}`, status: 'needs_repair' }
     setRepairs(r => [rec, ...r])

@@ -171,7 +171,7 @@ function AddRecordModal() {
         addRegistration({ unit_id: unitId, state: fields.state || 'TX', plate_number: fields.plate || '', doc_number: fields.doc_number || `REG-${Date.now().toString().slice(-6)}`, reg_date: fields.date || new Date().toISOString().slice(0, 10) })
         break
       case 'Repair':
-        addRepair({ unit_id: unitId, service: fields.service || '', cost: Number(fields.cost) || 0, category: fields.category || 'Engine', shop: fields.shop || '' })
+        addRepair({ unit_id: unitId, service: fields.service || '', cost: Number(fields.cost) || 0, category: fields.category || 'Engine', shop: fields.shop || '', shop_type: (fields.shop_type as 'local' | 'our') || 'local' })
         break
       case 'Defect':
         addDefect({ unit_id: unitId, description: fields.description || '', severity })
@@ -223,7 +223,21 @@ function AddRecordModal() {
               </select>
             </Field>
           </div>
-          <Field label="Shop"><Input value={fields.shop || ''} onChange={v => set('shop', v)} placeholder="Shop name" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Shop"><Input value={fields.shop || ''} onChange={v => set('shop', v)} placeholder="Shop name" /></Field>
+            <Field label="Shop Type">
+              <div className="flex gap-2">
+                {(['local', 'our'] as const).map(t => (
+                  <button key={t} onClick={() => set('shop_type', t)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${(fields.shop_type || 'local') === t
+                      ? t === 'our' ? 'bg-accent/20 border-accent text-accent' : 'bg-orange-500/20 border-orange-500 text-orange-400'
+                      : 'border-navy-600 text-slate-500 hover:text-slate-300'}`}>
+                    {t === 'our' ? 'Our Shop' : 'Local Shop'}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          </div>
         </>}
         {tab === 'Defect' && <>
           <Field label="Description"><textarea value={fields.description || ''} onChange={e => set('description', e.target.value)} placeholder="Describe the defect..."
