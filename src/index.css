@@ -118,21 +118,19 @@ body {
 }
 .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
 
-/* Airport split-flap flip animation — 3 flips like a real board */
+/* Airport split-flap flip — full card rotates on X axis */
 @keyframes airport-flip {
-  0% { transform: rotateX(0deg) scaleY(1); background-color: rgba(250, 204, 21, 0.3); }
-  8% { transform: rotateX(90deg) scaleY(0.01); }
-  16% { transform: rotateX(0deg) scaleY(1); background-color: rgba(250, 204, 21, 0.2); }
-  24% { transform: rotateX(90deg) scaleY(0.01); }
-  32% { transform: rotateX(0deg) scaleY(1); background-color: rgba(250, 204, 21, 0.15); }
-  40% { transform: rotateX(90deg) scaleY(0.01); }
-  48% { transform: rotateX(0deg) scaleY(1); background-color: rgba(16, 185, 129, 0.2); }
-  100% { transform: rotateX(0deg) scaleY(1); background-color: transparent; }
+  0% { transform: perspective(600px) rotateX(0deg); background-color: rgba(250, 204, 21, 0.25); }
+  10% { transform: perspective(600px) rotateX(180deg); }
+  20% { transform: perspective(600px) rotateX(360deg); background-color: rgba(250, 204, 21, 0.15); }
+  30% { transform: perspective(600px) rotateX(540deg); }
+  40% { transform: perspective(600px) rotateX(720deg); background-color: rgba(16, 185, 129, 0.2); }
+  50% { transform: perspective(600px) rotateX(720deg); }
+  100% { transform: perspective(600px) rotateX(720deg); background-color: transparent; }
 }
 .animate-flip {
-  animation: airport-flip 2s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center center;
-  perspective: 400px;
+  animation: airport-flip 2.5s ease-in-out;
+  transform-style: preserve-3d;
 }
 
 /* Red critical glow — breathing background */
