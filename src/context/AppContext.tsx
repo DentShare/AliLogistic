@@ -218,22 +218,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => ch.close()
   }, [])
 
-  const broadcastState = useCallback(() => {
+  // Broadcast ALL data on any change
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return }
     channelRef.current?.postMessage({
       units, oilRecords, inspections, registrations, repairs, defects,
       drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog,
     })
   }, [units, oilRecords, inspections, registrations, repairs, defects, drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog])
-
-  // Broadcast on any data change
-  const prevBroadcast = useRef('')
-  useEffect(() => {
-    const key = JSON.stringify({ u: units.length, o: oilRecords.length, r: repairs.length, d: defects.length, s: unitStatuses.map(s => s.updated_at).join(''), m: dailyMileage.length })
-    if (prevBroadcast.current && prevBroadcast.current !== key) {
-      broadcastState()
-    }
-    prevBroadcast.current = key
-  }, [units, oilRecords, inspections, registrations, repairs, defects, drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog, broadcastState])
   const [searchQuery, setSearchQuery] = useState('')
   const [modal, setModal] = useState<ModalState>({ type: null })
   const [toasts, setToasts] = useState<Toast[]>([])
