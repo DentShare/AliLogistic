@@ -33,7 +33,7 @@ export default function Login() {
             <Truck size={28} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Logistic Tab</h1>
+            <h1 className="text-2xl font-bold text-white">AliLogistic</h1>
             <p className="text-xs text-slate-500">Fleet Management Platform</p>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-slate-600 mt-6">
-          Logistic Tab v1.0 — Fleet Management
+          AliLogistic v1.0 — Fleet Management
         </p>
       </div>
     </div>

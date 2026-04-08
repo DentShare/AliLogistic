@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Radio, Gauge, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle, Truck, Users, ClipboardList, Shield, LogOut } from 'lucide-react'
+import { LayoutDashboard, Radio, Gauge, Droplets, ShieldCheck, FileText, Wrench, AlertTriangle, Truck, Users, ClipboardList, Shield, LogOut, RotateCcw } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { oilStatus } from '../data/mock'
 
@@ -34,7 +34,7 @@ export default function Sidebar() {
           <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
             <Truck size={18} className="text-white" />
           </div>
-          <span className="text-lg font-semibold text-white">Logistic Tab</span>
+          <span className="text-lg font-semibold text-white">AliLogistic</span>
         </div>
       </div>
       <nav className="flex-1 p-3 space-y-1">
@@ -63,6 +63,9 @@ export default function Sidebar() {
             <div className="text-sm font-medium text-white truncate">{currentUser?.name || 'User'}</div>
             <div className="text-xs text-slate-500 truncate">{currentUser?.email}</div>
           </div>
+          <button onClick={() => { if (confirm('Reset all data to defaults?')) { Object.keys(localStorage).filter(k => k.startsWith('lt_') && k !== 'lt_auth').forEach(k => localStorage.removeItem(k)); window.location.reload() } }} className="p-1.5 rounded-lg hover:bg-orange-500/15 text-slate-500 hover:text-orange-400 transition-colors" title="Reset data">
+            <RotateCcw size={14} />
+          </button>
           <button onClick={logout} className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-500 hover:text-red-400 transition-colors" title="Sign out">
             <LogOut size={16} />
           </button>
