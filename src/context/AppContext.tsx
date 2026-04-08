@@ -155,20 +155,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(false)
   }, [])
 
-  const [units, setUnits] = useState<Unit[]>(structuredClone(initUnits))
-  const [oilRecords, setOilRecords] = useState<OilRecord[]>(structuredClone(initOil))
-  const [inspections, setInspections] = useState<Inspection[]>(structuredClone(initInsp))
-  const [registrations, setRegistrations] = useState<Registration[]>(structuredClone(initReg))
-  const [repairs, setRepairs] = useState<Repair[]>(structuredClone(initRepairs))
-  const [defects, setDefects] = useState<Defect[]>(structuredClone(initDefects))
-  const [drivers, setDrivers] = useState<Driver[]>(structuredClone(initDrivers))
-  const [dispatchers, setDispatchers] = useState<Dispatcher[]>(structuredClone(initDispatchers))
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>(structuredClone(initAudit))
-  const [unitStatuses, setUnitStatuses] = useState<UnitStatus[]>(structuredClone(initUnitStatuses))
-  const [unitStatusLog, setUnitStatusLog] = useState<UnitStatusLogEntry[]>(structuredClone(initUnitStatusLog))
-  const [dailyMileage, setDailyMileage] = useState<DailyMileageEntry[]>(structuredClone(initDailyMileage))
-  const [oilThresholds, setOilThresholds] = useState(defaultOilThresholds)
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  // Persist state to localStorage
+  function loadState<T>(key: string, fallback: T): T {
+    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : structuredClone(fallback) }
+    catch { return structuredClone(fallback) }
+  }
+
+  const [units, setUnits] = useState<Unit[]>(() => loadState('lt_units', initUnits))
+  const [oilRecords, setOilRecords] = useState<OilRecord[]>(() => loadState('lt_oil', initOil))
+  const [inspections, setInspections] = useState<Inspection[]>(() => loadState('lt_insp', initInsp))
+  const [registrations, setRegistrations] = useState<Registration[]>(() => loadState('lt_reg', initReg))
+  const [repairs, setRepairs] = useState<Repair[]>(() => loadState('lt_repairs', initRepairs))
+  const [defects, setDefects] = useState<Defect[]>(() => loadState('lt_defects', initDefects))
+  const [drivers, setDrivers] = useState<Driver[]>(() => loadState('lt_drivers', initDrivers))
+  const [dispatchers, setDispatchers] = useState<Dispatcher[]>(() => loadState('lt_dispatchers', initDispatchers))
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>(() => loadState('lt_audit', initAudit))
+  const [unitStatuses, setUnitStatuses] = useState<UnitStatus[]>(() => loadState('lt_statuses', initUnitStatuses))
+  const [unitStatusLog, setUnitStatusLog] = useState<UnitStatusLogEntry[]>(() => loadState('lt_statuslog', initUnitStatusLog))
+  const [dailyMileage, setDailyMileage] = useState<DailyMileageEntry[]>(() => loadState('lt_mileage', initDailyMileage))
+  const [oilThresholds, setOilThresholds] = useState(() => loadState('lt_thresholds', defaultOilThresholds))
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('lt_theme') as 'dark' | 'light') || 'dark')
+
+  // Save to localStorage on every change
+  useEffect(() => { localStorage.setItem('lt_units', JSON.stringify(units)) }, [units])
+  useEffect(() => { localStorage.setItem('lt_oil', JSON.stringify(oilRecords)) }, [oilRecords])
+  useEffect(() => { localStorage.setItem('lt_insp', JSON.stringify(inspections)) }, [inspections])
+  useEffect(() => { localStorage.setItem('lt_reg', JSON.stringify(registrations)) }, [registrations])
+  useEffect(() => { localStorage.setItem('lt_repairs', JSON.stringify(repairs)) }, [repairs])
+  useEffect(() => { localStorage.setItem('lt_defects', JSON.stringify(defects)) }, [defects])
+  useEffect(() => { localStorage.setItem('lt_drivers', JSON.stringify(drivers)) }, [drivers])
+  useEffect(() => { localStorage.setItem('lt_dispatchers', JSON.stringify(dispatchers)) }, [dispatchers])
+  useEffect(() => { localStorage.setItem('lt_audit', JSON.stringify(auditLog)) }, [auditLog])
+  useEffect(() => { localStorage.setItem('lt_statuses', JSON.stringify(unitStatuses)) }, [unitStatuses])
+  useEffect(() => { localStorage.setItem('lt_statuslog', JSON.stringify(unitStatusLog)) }, [unitStatusLog])
+  useEffect(() => { localStorage.setItem('lt_mileage', JSON.stringify(dailyMileage)) }, [dailyMileage])
+  useEffect(() => { localStorage.setItem('lt_thresholds', JSON.stringify(oilThresholds)) }, [oilThresholds])
+  useEffect(() => { localStorage.setItem('lt_theme', theme) }, [theme])
   const [fullscreen, setFullscreen] = useState(false)
 
   // Cross-tab sync via BroadcastChannel
