@@ -15,17 +15,19 @@ export default function Dashboard() {
   const [changedUnits, setChangedUnits] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    // Build per-unit snapshot
+    // Build per-unit snapshot — track ALL fields that affect Dashboard
     const snapshot: Record<string, string> = {}
     units.forEach(u => {
       const st = unitStatuses.find(s => s.unit_id === u.id)
-      const oilRem = oilRecords.filter(o => o.unit_id === u.id).map(o => o.remaining).join(',')
-      snapshot[u.id] = `${u.mileage}|${st?.status}|${st?.condition}|${st?.updated_at}|${oilRem}`
+      const oils = oilRecords.filter(o => o.unit_id === u.id).map(o => `${o.remaining}:${o.sent_for_change}`).join(',')
+      const defs = defects.filter(d => d.unit_id === u.id).map(d => `${d.status}:${d.severity}`).join(',')
+      const reps = repairs.filter(r => r.unit_id === u.id).map(r => r.status).join(',')
+      const insps = inspections.filter(i => i.unit_id === u.id).map(i => `${i.days_remaining}`).join(',')
+      snapshot[u.id] = `${u.mileage}|${u.status}|${st?.status}|${st?.condition}|${oils}|${defs}|${reps}|${insps}`
     })
     const snapStr = JSON.stringify(snapshot)
 
     if (prevSnapshot.current && prevSnapshot.current !== snapStr) {
-      // Find which units changed
       const prev = JSON.parse(prevSnapshot.current) as Record<string, string>
       const changed = new Set<string>()
       for (const id of Object.keys(snapshot)) {
@@ -33,14 +35,14 @@ export default function Dashboard() {
       }
       if (changed.size > 0) {
         setChangedUnits(changed)
-        setTimeout(() => setChangedUnits(new Set()), 1500)
+        setTimeout(() => setChangedUnits(new Set()), 2500)
       }
       setLastChange(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
       setFlash(true)
       setTimeout(() => setFlash(false), 2000)
     }
     prevSnapshot.current = snapStr
-  }, [unitStatuses, units, oilRecords, defects, repairs])
+  }, [unitStatuses, units, oilRecords, defects, repairs, inspections])
 
   useEffect(() => {
     if (!fullscreen) return
