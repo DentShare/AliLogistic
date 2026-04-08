@@ -286,6 +286,26 @@ function TruckCard({ unit, severity = 'ok', extra, variant = 0, changedUnits }: 
   const isChanged = changedUnits?.has(unit.id) || false
   const glowClass = isPulse ? 'animate-critical-glow' : severity === 'warning' || severity === 'moderate' || severity === 'in_repair' ? 'animate-warning-glow' : ''
 
+  // Show old value during first half of flip, new value after
+  const prevExtra = useRef(extra)
+  const [displayExtra, setDisplayExtra] = useState(extra)
+
+  useEffect(() => {
+    if (isChanged && prevExtra.current !== extra) {
+      // Keep showing old value during flip
+      setDisplayExtra(prevExtra.current)
+      // Switch to new value at midpoint of animation
+      const timer = setTimeout(() => {
+        setDisplayExtra(extra)
+        prevExtra.current = extra
+      }, 800) // flip midpoint
+      return () => clearTimeout(timer)
+    } else {
+      setDisplayExtra(extra)
+      prevExtra.current = extra
+    }
+  }, [extra, isChanged])
+
   // Variant 1: tiny colored chip, just unit number
   if (variant === 1) {
     return (
@@ -358,7 +378,7 @@ function TruckCard({ unit, severity = 'ok', extra, variant = 0, changedUnits }: 
           <span className="text-[10px] text-slate-400 truncate">{unit.driver}</span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {extra && <span className="text-[10px] font-mono font-semibold" style={{ color: hex }}>{extra}</span>}
+          {displayExtra && <span className="text-[10px] font-mono font-semibold" style={{ color: hex }}>{displayExtra}</span>}
           {isPulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: hex }} />}
         </div>
       </div>

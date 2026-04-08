@@ -118,18 +118,24 @@ body {
 }
 .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
 
-/* Airport split-flap flip — full card rotates on X axis */
+/* Airport split-flap flip — full card flips showing old→new value */
 @keyframes airport-flip {
-  0% { transform: perspective(600px) rotateX(0deg); background-color: rgba(250, 204, 21, 0.25); }
-  10% { transform: perspective(600px) rotateX(180deg); }
-  20% { transform: perspective(600px) rotateX(360deg); background-color: rgba(250, 204, 21, 0.15); }
-  30% { transform: perspective(600px) rotateX(540deg); }
-  40% { transform: perspective(600px) rotateX(720deg); background-color: rgba(16, 185, 129, 0.2); }
-  50% { transform: perspective(600px) rotateX(720deg); }
-  100% { transform: perspective(600px) rotateX(720deg); background-color: transparent; }
+  0% { transform: perspective(800px) rotateX(0deg); background-color: rgba(250, 204, 21, 0.3); }
+  /* First flip — old data visible */
+  15% { transform: perspective(800px) rotateX(90deg); opacity: 0.3; }
+  /* Card edge-on — text switches here (800ms) */
+  16% { transform: perspective(800px) rotateX(90deg); opacity: 0; }
+  17% { transform: perspective(800px) rotateX(90deg); opacity: 0.3; }
+  /* Second half — new data visible */
+  32% { transform: perspective(800px) rotateX(0deg); background-color: rgba(16, 185, 129, 0.25); }
+  /* Settle bounce */
+  38% { transform: perspective(800px) rotateX(-8deg); }
+  44% { transform: perspective(800px) rotateX(3deg); }
+  50% { transform: perspective(800px) rotateX(0deg); background-color: rgba(16, 185, 129, 0.15); }
+  100% { transform: perspective(800px) rotateX(0deg); background-color: transparent; }
 }
 .animate-flip {
-  animation: airport-flip 2.5s ease-in-out;
+  animation: airport-flip 2.5s cubic-bezier(0.25, 0.1, 0.25, 1);
   transform-style: preserve-3d;
 }
 
