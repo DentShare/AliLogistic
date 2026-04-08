@@ -151,8 +151,8 @@ export default function Dashboard() {
       title: 'In Repair',
       color: 'bg-orange-500/20 text-orange-400',
       count: inRepair.length,
-      children: inRepair.map(r => { const u = getUnit(r.unit_id); const shopTag = r.shop_type === 'our' ? 'OUR' : 'LOCAL'; return u ? (
-        <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} extra={`${shopTag} · ${r.status === 'sent' ? 'Sent' : 'In Repair'}`} variant={variant} changedUnits={changedUnits} />
+      children: inRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
+        <TruckCard key={r.id} unit={u} severity={r.status === 'sent' ? 'sent' : 'in_repair'} extra={r.status === 'sent' ? 'Sent' : 'In Repair'} shopType={r.shop_type} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -160,8 +160,8 @@ export default function Dashboard() {
       title: 'Needs Repair',
       color: 'bg-red-500/20 text-red-400',
       count: needsRepair.length,
-      children: needsRepair.map(r => { const u = getUnit(r.unit_id); const shopTag = r.shop_type === 'our' ? 'OUR' : 'LOCAL'; return u ? (
-        <TruckCard key={r.id} unit={u} severity="needs_repair" extra={`${shopTag} · Needs Repair`} variant={variant} changedUnits={changedUnits} />
+      children: needsRepair.map(r => { const u = getUnit(r.unit_id); return u ? (
+        <TruckCard key={r.id} unit={u} severity="needs_repair" extra="Needs Repair" shopType={r.shop_type} variant={variant} changedUnits={changedUnits} />
       ) : null }),
     },
     {
@@ -274,10 +274,11 @@ const severityHex: Record<string, string> = {
   moderate: '#f97316', low: '#eab308',
 }
 
-function TruckCard({ unit, severity = 'ok', extra, variant = 0, changedUnits }: {
+function TruckCard({ unit, severity = 'ok', extra, shopType, variant = 0, changedUnits }: {
   unit: { id: string; unit_number: string; driver: string; mileage: number }
   severity?: string
   extra?: string
+  shopType?: 'local' | 'our'
   variant?: number
   changedUnits?: Set<string>
 }) {
@@ -378,6 +379,7 @@ function TruckCard({ unit, severity = 'ok', extra, variant = 0, changedUnits }: 
           <span className="text-[10px] text-slate-400 truncate">{unit.driver}</span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {shopType && <span className={`text-[9px] font-bold px-1 rounded ${shopType === 'our' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-amber-500/20 text-amber-400'}`}>{shopType === 'our' ? 'OUR' : 'LOCAL'}</span>}
           {displayExtra && <span className="text-[10px] font-mono font-semibold" style={{ color: hex }}>{displayExtra}</span>}
           {isPulse && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: hex }} />}
         </div>
