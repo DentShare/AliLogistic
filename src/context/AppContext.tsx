@@ -129,6 +129,7 @@ const VALID_CREDENTIALS = [
   { email: 'admin@logistictab.io', password: 'admin123', name: 'Admin', role: 'admin' },
   { email: 'mike@logistictab.io', password: 'mike123', name: 'Mike Johnson', role: 'dispatcher' },
   { email: 'alex@logistictab.io', password: 'alex123', name: 'Alex Brown', role: 'dispatcher' },
+  { email: 'update@logistictab.io', password: 'update123', name: 'Update User', role: 'updater' },
   { email: 'demo@logistictab.io', password: 'demo123', name: 'Demo User', role: 'viewer' },
 ]
 

@@ -160,7 +160,7 @@ export default function UnitProfile() {
         const opStatus = unitStatus?.status || 'no_load'
         const cfg = OP_STATUS_CONFIG[opStatus]
         const statusHistory = unitStatusLog.filter(e => e.unit_id === id).slice(0, 10)
-        const isViewer = currentUser?.role === 'viewer'
+        const canEditStatus = currentUser?.role === 'admin' || currentUser?.role === 'updater'
         return (
           <div className="space-y-6">
             {/* Current Status Card */}
@@ -170,7 +170,7 @@ export default function UnitProfile() {
                   <Radio size={18} className={cfg.textColor} />
                   <span className="text-sm font-semibold text-slate-300">Current Operational Status</span>
                 </div>
-                {!isViewer && (
+                {canEditStatus && (
                   <button onClick={() => openModal('update-status', { unitId: unit.id })}
                     className="px-3 py-1.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors">
                     Update Status

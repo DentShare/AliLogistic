@@ -107,6 +107,8 @@ export default function Login() {
           <div className="space-y-1.5">
             {[
               { email: 'admin@logistictab.io', pass: 'admin123', role: 'Admin' },
+              { email: 'mike@logistictab.io', pass: 'mike123', role: 'Dispatcher' },
+              { email: 'update@logistictab.io', pass: 'update123', role: 'Updater' },
               { email: 'demo@logistictab.io', pass: 'demo123', role: 'Viewer' },
             ].map(c => (
               <button

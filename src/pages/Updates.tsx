@@ -50,7 +50,7 @@ export default function Updates() {
   const [conditionInput, setConditionInput] = useState<UnitCondition>(null)
   const [conditionNote, setConditionNote] = useState('')
 
-  const isViewer = currentUser?.role === 'viewer'
+  const canEditUpdates = currentUser?.role === 'admin' || currentUser?.role === 'updater'
 
   useEffect(() => {
     if (!fullscreen) return
@@ -207,7 +207,7 @@ export default function Updates() {
                       <td className="px-3 py-2 text-slate-400 text-xs truncate max-w-[180px]">{st?.origin && st?.destination ? `${st.origin} → ${st.destination}` : '—'}</td>
                       <td className="px-3 py-2 text-xs text-slate-500">{timeAgo(st?.updated_at || '')}</td>
                       <td className="px-3 py-2">
-                        {!isViewer && <button onClick={e => { e.stopPropagation(); openModal('update-status', { unitId: unit.id }) }} className="text-xs text-accent hover:text-accent-hover">Status</button>}
+                        {canEditUpdates && <button onClick={e => { e.stopPropagation(); openModal('update-status', { unitId: unit.id }) }} className="text-xs text-accent hover:text-accent-hover">Status</button>}
                       </td>
                     </tr>
                   )
@@ -259,7 +259,7 @@ export default function Updates() {
           </div>
 
           {/* Set Condition */}
-          {!isViewer && (
+          {canEditUpdates && (
             <div className="p-4 space-y-2 border-b border-navy-700">
               <span className="text-xs font-semibold text-slate-300">Set Condition</span>
               <div className="flex gap-1">
@@ -282,7 +282,7 @@ export default function Updates() {
           )}
 
           {/* Change Status */}
-          {!isViewer && (
+          {canEditUpdates && (
             <div className="p-4 border-b border-navy-700">
               <button onClick={() => openModal('update-status', { unitId: selectedUnit.unit.id })} className="w-full py-1.5 bg-navy-700 text-slate-300 text-xs font-semibold rounded hover:bg-navy-600 transition-colors">
                 Change Location Status

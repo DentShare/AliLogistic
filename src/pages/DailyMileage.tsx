@@ -12,7 +12,7 @@ export default function DailyMileage() {
   const [inputs, setInputs] = useState<Record<string, string>>({})
   const [search, setSearch] = useState('')
 
-  const isViewer = currentUser?.role === 'viewer'
+  const isViewer = currentUser?.role === 'viewer' || currentUser?.role === 'updater'
   const sq = search.toLowerCase()
 
   const activeUnits = units
