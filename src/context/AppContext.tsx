@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import {
   units as initUnits, oilRecords as initOil, inspections as initInsp,
   registrations as initReg, repairs as initRepairs, defects as initDefects,
@@ -193,40 +193,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => { localStorage.setItem('lt_theme', theme) }, [theme])
   const [fullscreen, setFullscreen] = useState(false)
 
-  // Cross-tab sync via BroadcastChannel
-  const channelRef = useRef<BroadcastChannel | null>(null)
-  const ignoreNextBroadcast = useRef(false)
-
+  // Cross-tab sync via localStorage 'storage' event
+  // When another tab writes to localStorage, this tab reads the fresh data
   useEffect(() => {
-    const ch = new BroadcastChannel('alilogistic-sync')
-    channelRef.current = ch
-    ch.onmessage = (e) => {
-      if (ignoreNextBroadcast.current) { ignoreNextBroadcast.current = false; return }
-      const d = e.data
-      if (d.units) setUnits(d.units)
-      if (d.oilRecords) setOilRecords(d.oilRecords)
-      if (d.inspections) setInspections(d.inspections)
-      if (d.registrations) setRegistrations(d.registrations)
-      if (d.repairs) setRepairs(d.repairs)
-      if (d.defects) setDefects(d.defects)
-      if (d.drivers) setDrivers(d.drivers)
-      if (d.unitStatuses) setUnitStatuses(d.unitStatuses)
-      if (d.unitStatusLog) setUnitStatusLog(d.unitStatusLog)
-      if (d.dailyMileage) setDailyMileage(d.dailyMileage)
-      if (d.auditLog) setAuditLog(d.auditLog)
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key?.startsWith('lt_') || !e.newValue) return
+      try {
+        const val = JSON.parse(e.newValue)
+        switch (e.key) {
+          case 'lt_units': setUnits(val); break
+          case 'lt_oil': setOilRecords(val); break
+          case 'lt_insp': setInspections(val); break
+          case 'lt_reg': setRegistrations(val); break
+          case 'lt_repairs': setRepairs(val); break
+          case 'lt_defects': setDefects(val); break
+          case 'lt_drivers': setDrivers(val); break
+          case 'lt_dispatchers': setDispatchers(val); break
+          case 'lt_statuses': setUnitStatuses(val); break
+          case 'lt_statuslog': setUnitStatusLog(val); break
+          case 'lt_mileage': setDailyMileage(val); break
+          case 'lt_audit': setAuditLog(val); break
+          case 'lt_thresholds': setOilThresholds(val); break
+        }
+      } catch { /* ignore parse errors */ }
     }
-    return () => ch.close()
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [])
-
-  // Broadcast ALL data on any change
-  const mountedRef = useRef(false)
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return }
-    channelRef.current?.postMessage({
-      units, oilRecords, inspections, registrations, repairs, defects,
-      drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog,
-    })
-  }, [units, oilRecords, inspections, registrations, repairs, defects, drivers, unitStatuses, unitStatusLog, dailyMileage, auditLog])
   const [searchQuery, setSearchQuery] = useState('')
   const [modal, setModal] = useState<ModalState>({ type: null })
   const [toasts, setToasts] = useState<Toast[]>([])
